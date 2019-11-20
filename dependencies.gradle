@@ -1,0 +1,208 @@
+ext {
+
+    androidBuildToolsVersion = '28.0.3'
+    androidMinSdkVersion = 21
+    androidTargetSdkVersion = 28
+    androidCompileSdkVersion = 28
+
+    coroutinesVersion = '1.3.2'
+
+    appCompat = '1.1.0'
+    recycler = '1.0.0'
+
+    timberVersion = '4.7.1'
+    constraintVersion = '1.1.3'
+    lifecycleVersion = '1.1.1'
+    supportVersion = '28.0.0'
+    rxJavaVersion = '2.2.14'
+    rxAndroidVersion = '2.1.1'
+    glideVersion = '4.10.0'
+    shimmerVersion = '0.5.0'
+    lottieVersion = '3.0.7'
+
+    roomVersion = '2.1.0'
+
+    moshiVersion = '1.8.0'
+    okHttpVersion = '4.0.1'
+    retrofitVersion = '2.6.1'
+
+    daggerVersion = '2.24'
+    toothpickVersion = '3.1.0'
+
+    mockitoVersion = '2.24.0'
+    mockitoKotlinVersion = '2.1.0'
+    junitVersion = '4.12'
+    robolectricVersion = '4.3'
+
+    leakCanary = '2.0-beta-4'
+
+
+    modules = [
+            domain : ':domain',
+            data   : ':data',
+            library: ':library'
+    ]
+
+    javaDependencies = [
+            kotlin           : "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version",
+            kotlinReflect    : "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
+            coroutinesCore   : "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion",
+            coroutinesRx     : "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$coroutinesVersion",
+
+            moshi            : "com.squareup.moshi:moshi:$moshiVersion",
+            moshiKotlin      : "com.squareup.moshi:moshi-kotlin:$moshiVersion",
+            moshiCodegen     : "com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion",
+            okHttp           : "com.squareup.okhttp3:okhttp:$okHttpVersion",
+            retrofit         : "com.squareup.retrofit2:retrofit:$retrofitVersion",
+            moshiRetrofit    : "com.squareup.retrofit2:converter-moshi:$retrofitVersion",
+            okHttpLogging    : "com.squareup.okhttp3:logging-interceptor:$okHttpVersion",
+
+            dagger           : "com.google.dagger:dagger:$daggerVersion",
+            daggerCompiler   : "com.google.dagger:dagger-compiler:$daggerVersion",
+
+            toothpick        : "com.github.stephanenicolas.toothpick:ktp:$toothpickVersion",
+            toothpickCompiler: "com.github.stephanenicolas.toothpick:toothpick-compiler:$toothpickVersion",
+
+            javax            : "javax.inject:javax.inject:1",
+            rxJava           : "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
+    ]
+
+    testDependencies = [
+            mockito      : "org.mockito:mockito-core:$mockitoVersion",
+            mockitoKotlin: "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion",
+            junit        : "junit:junit:$junitVersion",
+            robolectric  : "org.robolectric:robolectric:$robolectricVersion"
+    ]
+
+
+    androidDependencies = [
+            timber               : "com.jakewharton.timber:timber:$timberVersion",
+            constraintLayout     : "androidx.constraintlayout:constraintlayout:$constraintVersion",
+            cardView             : "com.android.support:cardview-v7:$supportVersion",
+            snakbar              : "com.android.support:design:$supportVersion",
+
+            // viewmodel            : "android.arch.lifecycle:viewmodel:$lifecycleVersion",
+            // lifecycleExtensions  : "android.arch.lifecycle:extensions:$lifecycleVersion",
+            recyclerView         : "com.android.support:recyclerview-v7:$supportVersion",
+            core                 : "androidx.core:core-ktx:$appCompat",
+            appcompat            : "androidx.appcompat:appcompat:$appCompat",
+            recycler             : "androidx.recyclerview:recyclerview:$recycler",
+
+            retrofitRxJavaAdapter: "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion",
+            rxAndroid            : "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion",
+            glide                : "com.github.bumptech.glide:glide:$glideVersion",
+            glideCompiler        : "com.github.bumptech.glide:compiler:$glideVersion",
+            shimmer              : "com.facebook.shimmer:shimmer:$shimmerVersion",
+            lottie               : "com.airbnb.android:lottie:$lottieVersion",
+            roomRuntime          : "androidx.room:room-runtime:$roomVersion",
+            roomCompiler         : "androidx.room:room-compiler:$roomVersion",
+            roomRx               : "androidx.room:room-rxjava2:$roomVersion",
+
+            coroutinesAndroid    : "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion",
+
+            leakCanary           : "com.squareup.leakcanary:leakcanary-android:$leakCanary"
+    ]
+
+    domainDependencies = [
+            [configuration: "implementation", dependency: javaDependencies.kotlin],
+            [configuration: "implementation", dependency: javaDependencies.javax],
+            [configuration: "implementation", dependency: javaDependencies.rxJava],
+
+            [configuration: "testImplementation", dependency: testDependencies.junit],
+            [configuration: "testImplementation", dependency: testDependencies.mockito],
+            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin]
+    ]
+
+
+    appDependencies = [
+            [configuration: "implementation", dependency: javaDependencies.kotlin],
+            [configuration: "implementation", dependency: javaDependencies.kotlinReflect],
+            [configuration: "implementation", dependency: javaDependencies.coroutinesCore],
+            [configuration: "implementation", dependency: javaDependencies.coroutinesRx],
+            [configuration: "implementation", dependency: androidDependencies.coroutinesAndroid],
+
+            [configuration: "implementation", dependency: project(modules.library)],
+            [configuration: "implementation", dependency: project(modules.data)],
+            // [configuration: "implementation", dependency: project(modules.domain)],
+            // [configuration: "implementation", dependency: project(modules.data)],
+
+            [configuration: "implementation", dependency: javaDependencies.dagger],
+            [configuration: "kapt", dependency: javaDependencies.daggerCompiler],
+
+            // [configuration: "implementation", dependency: javaDependencies.toothpick],
+            // [configuration: "kapt", dependency: javaDependencies.toothpickCompiler],
+
+            [configuration: "implementation", dependency: javaDependencies.javax],
+            [configuration: "implementation", dependency: javaDependencies.rxJava],
+            [configuration: "implementation", dependency: androidDependencies.rxAndroid],
+
+            [configuration: "implementation", dependency: androidDependencies.constraintLayout],
+            [configuration: "implementation", dependency: androidDependencies.cardView],
+
+            // [configuration: "implementation", dependency: androidDependencies.viewmodel],
+            // [configuration: "implementation", dependency: androidDependencies.lifecycleExtensions],
+
+            [configuration: "implementation", dependency: androidDependencies.appcompat],
+            [configuration: "implementation", dependency: androidDependencies.recyclerView],
+            [configuration: "implementation", dependency: androidDependencies.snakbar],
+            [configuration: "implementation", dependency: androidDependencies.shimmer],
+            [configuration: "implementation", dependency: androidDependencies.lottie],
+
+            [configuration: "implementation", dependency: androidDependencies.timber],
+            [configuration: "implementation", dependency: androidDependencies.glide],
+            [configuration: "kapt", dependency: androidDependencies.glideCompiler],
+
+            [configuration: "testImplementation", dependency: testDependencies.robolectric],
+            [configuration: "testImplementation", dependency: testDependencies.junit],
+            [configuration: "testImplementation", dependency: testDependencies.mockito],
+            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
+
+            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary]
+    ]
+    dataDependencies = [
+            [configuration: "implementation", dependency: javaDependencies.kotlin],
+            // [configuration: "implementation", dependency: project(modules.domain)],
+            [configuration: "implementation", dependency: javaDependencies.retrofit],
+            [configuration: "implementation", dependency: javaDependencies.moshi],
+            [configuration: "kapt", dependency: javaDependencies.moshiCodegen],
+            [configuration: "implementation", dependency: javaDependencies.moshiRetrofit],
+            [configuration: "implementation", dependency: javaDependencies.moshiKotlin],
+            [configuration: "implementation", dependency: javaDependencies.okHttp],
+            [configuration: "implementation", dependency: javaDependencies.okHttpLogging],
+
+            [configuration: "implementation", dependency: javaDependencies.dagger],
+            [configuration: "kapt", dependency: javaDependencies.daggerCompiler],
+
+            [configuration: "implementation", dependency: javaDependencies.javax],
+            [configuration: "implementation", dependency: androidDependencies.timber],
+            [configuration: "implementation", dependency: javaDependencies.rxJava],
+            [configuration: "implementation", dependency: androidDependencies.retrofitRxJavaAdapter],
+            [configuration: "implementation", dependency: androidDependencies.rxAndroid],
+            [configuration: "implementation", dependency: androidDependencies.roomRuntime],
+            [configuration: "implementation", dependency: androidDependencies.roomRx],
+            [configuration: "kapt", dependency: androidDependencies.roomCompiler],
+
+            [configuration: "testImplementation", dependency: testDependencies.robolectric],
+            [configuration: "testImplementation", dependency: testDependencies.junit],
+            [configuration: "testImplementation", dependency: testDependencies.mockito],
+            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
+    ]
+    coreDependencies = [
+            [configuration: "implementation", dependency: javaDependencies.kotlin],
+            [configuration: "implementation", dependency: javaDependencies.kotlinReflect],
+            [configuration: "implementation", dependency: javaDependencies.coroutinesCore],
+            [configuration: "implementation", dependency: javaDependencies.coroutinesRx],
+            [configuration: "implementation", dependency: androidDependencies.coroutinesAndroid],
+
+            [configuration: "implementation", dependency: androidDependencies.timber],
+            [configuration: "implementation", dependency: javaDependencies.rxJava],
+            [configuration: "implementation", dependency: androidDependencies.rxAndroid],
+
+            [configuration: "testImplementation", dependency: testDependencies.robolectric],
+            [configuration: "testImplementation", dependency: testDependencies.junit],
+            [configuration: "testImplementation", dependency: testDependencies.mockito],
+            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
+
+            [configuration: "implementation", dependency: androidDependencies.appcompat]
+    ]
+}

@@ -1,0 +1,2 @@
+/**/rootProject.name='True reactive'
+include ':app', ':data', ':library'
