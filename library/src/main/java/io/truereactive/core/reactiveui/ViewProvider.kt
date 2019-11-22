@@ -14,7 +14,6 @@ import timber.log.Timber
 interface ViewEvents
 
 // TODO: not working
-//   Needed only in case of process death
 fun <VE : ViewEvents, M, D> Observable<D>.saveState(
     channel: ViewChannel<VE, M>,
     invoke: (Bundle, D) -> Unit
@@ -37,10 +36,9 @@ fun <VE : ViewEvents, M, D> Observable<D>.saveState(
 }
 
 fun <VE : ViewEvents, M> Observable<M>.renderWhileActive(channel: ViewChannel<VE, M>): Disposable {
-    // TODO: distinct somehow (ViewState.isAlive)
     val dataObservable = channel.state
         .switchMap { event ->
-            if (event in listOf(ViewState.Created, ViewState.Started, ViewState.Active)) {
+            if (event.isAlive) {
                 this
             } else {
                 Observable.empty()
@@ -63,38 +61,48 @@ fun <VE : ViewEvents, M> Observable<M>.renderWhileActive(channel: ViewChannel<VE
 }
 
 fun <VE : ViewEvents, M> Observable<M>.renderWhileAlive(channel: ViewChannel<VE, M>): Disposable {
+
+
     return Observable.combineLatest(
-        channel.state,      // TODO: distinct somehow (ViewState.isAlive)
         channel.renderer,
         this,
-        Function3 { state: ViewState, renderer: Optional<out Renderer<M>>, data: M ->
-            Triple(state, renderer, data)
+        BiFunction { renderer: Optional<out Renderer<M>>, data: M ->
+            Pair(renderer, data)
         }
-    ).filter {
-        it.first in listOf(
-            ViewState.Created,
-            ViewState.Started,
-            ViewState.Active
-        ) && it.second.value != null
-    }
-        .map {
-            Triple(it.first, it.second.value!!, it.third)
-        }.observeOn(AndroidSchedulers.mainThread())
-        .subscribe { (_, renderer, data) ->
+    ).takeUntil(channel.state.filter { it == ViewState.Dead })
+        .filter { it.first.value != null }
+        .map { Pair(it.first.value!!, it.second) }
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe { (renderer, data) ->
             renderer.render(data)
         }
 }
 
+
+// TODO: REVIEW
 fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(block: VE.() -> Observable<T>): Observable<T> {
     return this.viewEvents
-        .switchMap(block)
+        .switchMap {
+            it.value?.let(block) ?: Observable.empty()
+        }
         .takeUntil<T> { this.state.filter { it == ViewState.Dead } }
 }
 
 fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.mapUntilDead(block: VE.() -> T): Observable<T> {
-    return this.viewEvents
-        .map(block)
-        .takeUntil<T> { this.state.filter { it == ViewState.Dead } }
+
+    return Observable.combineLatest(
+        this.state.distinctUntilChanged { first, second ->
+            aliveStateChanged(first, second)
+        },
+        this.viewEvents,
+        BiFunction { state: ViewState, ve: Optional<out VE> ->
+            Pair(state, ve)
+        })
+        .takeWhile { it.first != ViewState.Dead }
+        .filter { it.first.isAlive && it.second.value != null }
+        .map {
+            it.second.value!!.block()
+        }
 }
 
 internal inline fun Activity.executeIfBase(action: (BaseActivity<ViewEvents, Any>) -> Unit) {

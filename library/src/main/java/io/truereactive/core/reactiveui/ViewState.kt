@@ -33,8 +33,8 @@ internal data class FragmentViewState<VE : ViewEvents, M>(
 sealed class ViewState(val name: String) {
     object Created : ViewState("Created")
     object Started : ViewState("Started")
-    object Active : ViewState("Active")
-    object Inactive : ViewState("Inactive")
+    object Resumed : ViewState("Resumed")
+    object Paused : ViewState("Paused")
     object Stopped : ViewState("Stopped")
     object SavingState : ViewState("SavingState")
     object Destroyed : ViewState("SavingState")
@@ -45,13 +45,22 @@ val ViewState.isAlive: Boolean
     get() = when(this) {
         ViewState.Created -> true
         ViewState.Started -> true
-        ViewState.Active -> true
-        ViewState.Inactive -> false
+        ViewState.Resumed -> true
+        ViewState.Paused -> false
         ViewState.Stopped -> false
         ViewState.SavingState -> false
         ViewState.Destroyed -> false
         ViewState.Dead -> false
     }
+
+fun aliveStateChanged(first: ViewState, second: ViewState): Boolean =
+    !(first.isAlive xor second.isAlive)
+
+internal fun <VE : ViewEvents, M, AVS : AndroidViewState<VE, M>> aliveStateChanged(
+    first: AVS,
+    second: AVS
+): Boolean =
+    aliveStateChanged(first.state, second.state)
 
 internal fun <VE : ViewEvents, M> FragmentViewState<VE, M>.print(): String =
     "${this::class.simpleName}[host=${host::class.simpleName}, state=${state.name}, view=${view.hashCode()}]"

@@ -26,9 +26,9 @@ object PresenterCache {
     }
 
     private fun logState() {
-        Timber.i("Cache size: ${map.size}")
+        Timber.d("Cache size: ${map.size}")
         if (map.isNotEmpty()) {
-            Timber.i("Cache: ${map.values.joinToString { it::class.simpleName.toString() }}")
+            Timber.d("Cache: ${map.values.joinToString { it::class.simpleName.toString() }}")
         }
     }
 

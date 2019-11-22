@@ -4,12 +4,13 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import io.truereactive.core.reactiveui.ViewEvents
-import io.truereactive.core.reactiveui.ViewState
-import io.truereactive.library.BuildConfig
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
+import io.truereactive.core.reactiveui.ViewEvents
+import io.truereactive.core.reactiveui.ViewState
+import io.truereactive.library.BuildConfig
+import java.util.*
 
 
 abstract class BasePresenter() {
@@ -42,7 +43,7 @@ internal interface BaseHost<VE : ViewEvents, M> : PresenterHost<VE, M>, ViewEven
 data class ViewChannel<VE : ViewEvents, M>(
     internal val savedState: Observable<Bundle>,
     val state: Observable<ViewState>,
-    val viewEvents: Observable<VE>,
+    val viewEvents: Observable<Optional<out VE>>,
     val renderer: Observable<Optional<out Renderer<M>>> // TODO use weakRef?
 )
 
@@ -76,5 +77,6 @@ internal class ViewDelegateImpl<VE : ViewEvents> : ViewDelegate<VE> {
 }
 
 data class Optional<T>(
-    val value: T?
+    val value: T?,
+    val logKey: String = UUID.randomUUID().toString()
 )

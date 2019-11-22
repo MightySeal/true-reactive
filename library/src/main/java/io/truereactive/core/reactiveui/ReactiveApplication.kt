@@ -12,6 +12,7 @@ import io.truereactive.core.abstraction.*
 import io.truereactive.core.abstraction.Optional
 import io.truereactive.library.BuildConfig
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import shark.ObjectInspector
 import timber.log.Timber
 import java.util.*
 
@@ -20,6 +21,14 @@ interface ReactiveApplication {
 
 @ExperimentalCoroutinesApi
 class ReactiveApp(app: Application) : ReactiveApplication {
+
+    val optionalReporter = ObjectInspector { reporter ->
+        reporter.whenInstanceOf(Optional::class) { instance ->
+
+            val label = instance[Optional::class, "logKey"]!!
+            reporter.labels.add("${label.name}: ${label.value.readAsJavaString()}")
+        }
+    }
 
     private val compositeDisposable = CompositeDisposable()
 
@@ -72,7 +81,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                             ActivityViewState(
                                 host = baseActivity,
                                 view = baseActivity.window.decorView.rootView,
-                                state = ViewState.Active,
+                                state = ViewState.Resumed,
                                 key = baseActivity.viewIdKey
                             )
                         )
@@ -85,7 +94,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                             ActivityViewState(
                                 host = baseActivity,
                                 view = baseActivity.window.decorView.rootView,
-                                state = ViewState.Inactive,
+                                state = ViewState.Paused,
                                 key = baseActivity.viewIdKey
                             )
                         )
@@ -106,7 +115,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                 }
 
                 override fun onActivityDestroyed(activity: Activity) {
-                    Timber.i("Activity destroyed: ${activity::class.simpleName}, isFinishing ${activity.isFinishing} changing config ${activity.isChangingConfigurations}")
+                    Timber.d("Activity destroyed: ${activity::class.simpleName}, isFinishing ${activity.isFinishing} changing config ${activity.isChangingConfigurations}")
                     activity.executeIfBase { baseActivity ->
 
                         emitter.onNext(
@@ -119,7 +128,6 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                         )
 
                         if (activity.isFinishing && !activity.isChangingConfigurations) {
-                            die(baseActivity)
                             emitter.onNext(
                                 ActivityViewState(
                                     host = baseActivity,
@@ -128,6 +136,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                     key = baseActivity.viewIdKey
                                 )
                             )
+                            die(baseActivity)
                         }
                     }
                 }
@@ -153,7 +162,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             app.registerActivityLifecycleCallbacks(callbacks)
 
             emitter.setCancellable {
-                Timber.i("Unregister activity callbacks")
+                Timber.d("Unregister activity callbacks")
                 app.unregisterActivityLifecycleCallbacks(callbacks)
             }
         }.share()
@@ -175,7 +184,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                         ) {
 
                             // TODO: Check if this method is called when rotated
-                            Timber.i("${f::class.simpleName}:${f.hashCode()} onFragmentPreCreated")
+                            Timber.d("${f::class.simpleName}:${f.hashCode()} onFragmentPreCreated")
                             f.executeIfBase { fragment ->
                                 bindPresenter(
                                     fragment,
@@ -243,7 +252,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                     FragmentViewState(
                                         host = it,
                                         view = null,
-                                        state = ViewState.Active,
+                                        state = ViewState.Resumed,
                                         key = it.viewIdKey
                                     )
                                 )
@@ -256,7 +265,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                     FragmentViewState(
                                         host = it,
                                         view = null,
-                                        state = ViewState.Inactive,
+                                        state = ViewState.Paused,
                                         key = it.viewIdKey
                                     )
                                 )
@@ -278,10 +287,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
 
                         override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
 
-                            Timber.i("Fragment destroyed: ${f::class.simpleName}")
+                            Timber.d("Fragment destroyed: ${f::class.simpleName}")
                             f.executeIfBase { fr ->
-
-                                Timber.i("Fragment destroyed: ${fr::class.simpleName}, isFinishing ${fr.requireActivity().isFinishing} changing config ${fr.requireActivity().isChangingConfigurations} isRemoving: ${fr.isRemoving}")
 
                                 emitter.onNext(
                                     FragmentViewState(
@@ -293,7 +300,9 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                 )
 
                                 if ((fr.requireActivity().isFinishing || fr.isRemoving) && !fr.requireActivity().isChangingConfigurations) {
-                                    die(fr)
+
+                                    Timber.d("Fragment died: ${fr::class.simpleName}, isFinishing ${fr.requireActivity().isFinishing} changing config ${fr.requireActivity().isChangingConfigurations} isRemoving: ${fr.isRemoving}")
+
                                     emitter.onNext(
                                         FragmentViewState(
                                             host = fr,
@@ -302,6 +311,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                             key = fr.viewIdKey
                                         )
                                     )
+
+                                    die(fr)
                                 }
                             }
                         }
@@ -320,8 +331,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                             ViewState.Created -> second
 
                             ViewState.Started,
-                            ViewState.Active,
-                            ViewState.Inactive -> second.copy(view = first.view)
+                            ViewState.Resumed,
+                            ViewState.Paused -> second.copy(view = first.view)
 
                             ViewState.Stopped,
                             ViewState.Destroyed,
@@ -340,7 +351,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
     init {
         hostCallbacks
             .subscribe({
-                Timber.d("Host rx: $it")
+                // Timber.d("Host rx: $it")
             }, {
                 Timber.e(it)
                 if (BuildConfig.DEBUG) {
@@ -350,8 +361,9 @@ class ReactiveApp(app: Application) : ReactiveApplication {
     }
 
     private fun <VE : ViewEvents, M> die(host: BaseHost<VE, M>) {
-        Timber.i("Die $host")
+        Timber.d("Die $host")
         PresenterCache.remove(host.viewIdKey).also {
+            Timber.i("Dispose ${it.disposable.size()} elements")
             it.dispose()
         }
     }
@@ -400,6 +412,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
         // TODO: Make state for for internal and external use. Internal has SavingState, external doesn't.
         val state = hostEvents
             .filter { it.key == hostKey }
+            .takeUntil { it.state == ViewState.Dead }
             .share()
 
         val savedState = state
@@ -418,26 +431,44 @@ class ReactiveApp(app: Application) : ReactiveApplication {
         // TODO: rethink filtering logic
         val viewEvents = viewState
             .filter { it.view != null }
-            .map { it.host.createViewHolder(it.view!!) }
+            .map { vs ->
+                if (vs.state.isAlive) {
+                    Optional(vs.host.createViewHolder(vs.view!!))
+                } else {
+                    Optional(null)
+                }
+            }
             .replay(1)
 
         val renderer = viewState
-            .map {
-                if (it.state.isAlive) {
-                    Optional(it.host)
+            .distinctUntilChanged(::aliveStateChanged)
+            .takeWhile { it.state != ViewState.Dead }
+            .map { vs ->
+                if (vs.state.isAlive) {
+                    Optional(vs.host)
                 } else {
                     Optional<Renderer<M>>(null)
                 }
             }
             .replay(1)
 
-        val viewChannel = ViewChannel(savedState, hostState, viewEvents, renderer)
+        val viewChannel = ViewChannel(
+            savedState = savedState,
+            state = hostState,
+            viewEvents = viewEvents,
+            renderer = renderer
+        )
 
-        val savedStateDisposable = savedState.connect()
-        val hostStateDisposable = hostState.connect()
-        val viewStateDisposable = viewState.connect()
-        val viewEventsDisposable = viewEvents.connect()
-        val rendererDisposable = renderer.connect()
+        val savedStateDisposable =
+            savedState.connect().asLoggable("================= savedStateDisposable")
+        val hostStateDisposable =
+            hostState.connect().asLoggable("================= hostStateDisposable")
+        val viewStateDisposable =
+            viewState.connect().asLoggable("================= viewStateDisposable")
+        val viewEventsDisposable =
+            viewEvents.connect().asLoggable("================= viewEventsDisposable")
+        val rendererDisposable =
+            renderer.connect().asLoggable("================= rendererDisposable")
 
         return host.createPresenter(viewChannel, args, savedInstanceState).also {
             it.disposable.add(savedStateDisposable)

@@ -11,7 +11,7 @@ import timber.log.Timber
 @ExperimentalCoroutinesApi
 open class FlickrApplication : Application() {
 
-    private lateinit var reactiveApp: ReactiveApp
+    lateinit var reactiveApp: ReactiveApp
 
     lateinit var appComponent: ApplicationComponent
 

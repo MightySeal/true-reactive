@@ -203,6 +203,8 @@ ext {
             [configuration: "testImplementation", dependency: testDependencies.mockito],
             [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
 
-            [configuration: "implementation", dependency: androidDependencies.appcompat]
+            [configuration: "implementation", dependency: androidDependencies.appcompat],
+
+            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary]
     ]
 }

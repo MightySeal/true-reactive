@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Flickr gallery</string>
+    <string name="leak_canary_display_activity_label">Flickr gallery leaks</string>
 </resources>

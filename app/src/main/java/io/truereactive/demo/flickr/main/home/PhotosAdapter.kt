@@ -27,10 +27,11 @@ class PhotosAdapter(private val context: Context,
 
         glide
             .load(item.previewSquare)
+            .placeholder(R.drawable.ic_image_preview_24)
+            .error(R.drawable.ic_image_preview_24)
             .into(holder.image)
 
         holder.title.text = item.title
-        holder.image.setImageResource(R.drawable.ic_image_preview_24)
     }
 }
 
