@@ -50,19 +50,18 @@ fun <VE : ViewEvents, M> Observable<M>.renderWhileActive(channel: ViewChannel<VE
         BiFunction<Optional<out Renderer<M>>, M, Pair<Optional<out Renderer<M>>, M>> { renderer, data ->
             Pair(renderer, data)
         }
-    ).filter { values: Pair<Optional<out Renderer<M>>, M> ->
-        values.first.value != null
-    }.map {
-        Pair(it.first.value!!, it.second)
-    }.observeOn(AndroidSchedulers.mainThread())
+    ).takeUntil(channel.state.filter { it == ViewState.Dead })
+        .filter { values: Pair<Optional<out Renderer<M>>, M> ->
+            values.first.value != null
+        }.map {
+            Pair(it.first.value!!, it.second)
+        }.observeOn(AndroidSchedulers.mainThread())
         .subscribe { (renderer, data) ->
             renderer.render(data)
         }
 }
 
 fun <VE : ViewEvents, M> Observable<M>.renderWhileAlive(channel: ViewChannel<VE, M>): Disposable {
-
-
     return Observable.combineLatest(
         channel.renderer,
         this,
@@ -83,26 +82,15 @@ fun <VE : ViewEvents, M> Observable<M>.renderWhileAlive(channel: ViewChannel<VE,
 fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(block: VE.() -> Observable<T>): Observable<T> {
     return this.viewEvents
         .switchMap {
-            it.value?.let(block) ?: Observable.empty()
+            it.let(block)
         }
-        .takeUntil<T> { this.state.filter { it == ViewState.Dead } }
+        .takeUntil(this.state.filter { it == ViewState.Dead })
 }
 
 fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.mapUntilDead(block: VE.() -> T): Observable<T> {
-
-    return Observable.combineLatest(
-        this.state.distinctUntilChanged { first, second ->
-            aliveStateChanged(first, second)
-        },
-        this.viewEvents,
-        BiFunction { state: ViewState, ve: Optional<out VE> ->
-            Pair(state, ve)
-        })
-        .takeWhile { it.first != ViewState.Dead }
-        .filter { it.first.isAlive && it.second.value != null }
-        .map {
-            it.second.value!!.block()
-        }
+    return this.viewEvents
+        .map(block)
+        .takeUntil(this.state.filter { it == ViewState.Dead })
 }
 
 internal inline fun Activity.executeIfBase(action: (BaseActivity<ViewEvents, Any>) -> Unit) {

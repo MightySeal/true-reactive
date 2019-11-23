@@ -13,6 +13,9 @@ import io.truereactive.library.BuildConfig
 import java.util.*
 
 
+// TODO: consider providing function like
+//  fun logic(events: Observable<SearchViewEvents>, disposable)
+//  so the object construction is predictable
 abstract class BasePresenter() {
     internal val disposable = CompositeDisposable()
 
@@ -43,7 +46,7 @@ internal interface BaseHost<VE : ViewEvents, M> : PresenterHost<VE, M>, ViewEven
 data class ViewChannel<VE : ViewEvents, M>(
     internal val savedState: Observable<Bundle>,
     val state: Observable<ViewState>,
-    val viewEvents: Observable<Optional<out VE>>,
+    val viewEvents: Observable<VE>,
     val renderer: Observable<Optional<out Renderer<M>>> // TODO use weakRef?
 )
 

@@ -16,9 +16,6 @@ class InputPresenter @Inject constructor(
     viewChannel: ViewChannel<InputViewEvents, SearchModel>
 ) : BasePresenter() {
 
-    // TODO: replace with function?
-    //  fun logic(events: Observable<SearchViewEvents>, disposable)
-    //
     init {
         viewChannel
             .viewEventsUntilDead { searchInput }
@@ -32,10 +29,6 @@ class InputPresenter @Inject constructor(
 
         mirror.renderWhileAlive(viewChannel)
             .untilDead()
-
-        // TODO: problem — when you get back from opened screen there's a new event from first observable (events fires new emit)
-        //  therefore combine latest fire a new event. Zip works as expected but that's contrintuitive.
-
 
         viewChannel
             .viewEventsUntilDead { searchInput }
@@ -51,7 +44,6 @@ class InputPresenter @Inject constructor(
             )
             .logLifecycle("==== Search navigation")
             .subscribe({
-                Timber.i("OPEN")
                 it.first(it.second)
             }, {
                 Timber.e(it)

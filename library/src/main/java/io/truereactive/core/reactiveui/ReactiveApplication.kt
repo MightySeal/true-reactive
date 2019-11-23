@@ -426,16 +426,9 @@ class ReactiveApp(app: Application) : ReactiveApplication {
         val viewState = state
             .replay(1)
 
-        // TODO: rethink filtering logic
         val viewEvents = viewState
             .filter { it.view != null }
-            .map { vs ->
-                if (vs.state.isAlive) {
-                    Optional(vs.host.createViewHolder(vs.view!!))
-                } else {
-                    Optional(null)
-                }
-            }
+            .map { vs -> vs.host.createViewHolder(vs.view!!) }
             .replay(1)
 
         val renderer = viewState
