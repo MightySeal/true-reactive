@@ -423,9 +423,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
         val hostState = state.map { it.state }
             .replay(1)
 
-        // TODO: rethink filtering logic
         val viewState = state
-            .takeWhile { it.state != ViewState.Dead }
             .replay(1)
 
         // TODO: rethink filtering logic
@@ -442,7 +440,6 @@ class ReactiveApp(app: Application) : ReactiveApplication {
 
         val renderer = viewState
             .distinctUntilChanged(::aliveStateChanged)
-            .takeWhile { it.state != ViewState.Dead }
             .map { vs ->
                 if (vs.state.isAlive) {
                     Optional(vs.host)
@@ -459,16 +456,11 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             renderer = renderer
         )
 
-        val savedStateDisposable =
-            savedState.connect().asLoggable("================= savedStateDisposable")
-        val hostStateDisposable =
-            hostState.connect().asLoggable("================= hostStateDisposable")
-        val viewStateDisposable =
-            viewState.connect().asLoggable("================= viewStateDisposable")
-        val viewEventsDisposable =
-            viewEvents.connect().asLoggable("================= viewEventsDisposable")
-        val rendererDisposable =
-            renderer.connect().asLoggable("================= rendererDisposable")
+        val savedStateDisposable = savedState.connect()
+        val hostStateDisposable = hostState.connect()
+        val viewStateDisposable = viewState.connect()
+        val viewEventsDisposable = viewEvents.connect()
+        val rendererDisposable = renderer.connect()
 
         return host.createPresenter(viewChannel, args, savedInstanceState).also {
             it.disposable.add(savedStateDisposable)
