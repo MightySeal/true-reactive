@@ -1,8 +1,6 @@
 apply from: 'dependencies.gradle'
 
 buildscript {
-    // ext.kotlin_version = '1.3.50'
-    // ext.kotlin_version = '1.3.60-eap-143'
     ext.kotlin_version = '1.3.60'
     repositories {
         google()
