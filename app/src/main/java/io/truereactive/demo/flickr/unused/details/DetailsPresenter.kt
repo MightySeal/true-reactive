@@ -1,10 +1,10 @@
 package io.truereactive.demo.flickr.unused.details
 
+import io.reactivex.Observable
+import io.reactivex.android.schedulers.AndroidSchedulers
 import io.truereactive.core.abstraction.BasePresenter
 import io.truereactive.core.abstraction.ViewChannel
 import io.truereactive.core.reactiveui.renderWhileAlive
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import java.util.concurrent.TimeUnit
 
 class DetailsPresenter(
@@ -14,8 +14,6 @@ class DetailsPresenter(
 ) : BasePresenter() {
 
     init {
-        viewChannel.viewEvents.subscribe().untilDead()
-
         val interval = Observable.interval(1, TimeUnit.SECONDS)
             .map { it + startIndex }
             .share()
@@ -26,13 +24,8 @@ class DetailsPresenter(
             .observeOn(AndroidSchedulers.mainThread())
 
         textTimer
-            // .bindActive(viewChannel)
             .renderWhileAlive(viewChannel)
             .untilDead()
-
-        /*interval
-            .saveState(viewChannel) { bundle, index -> bundle.putLong(TIME_KEY, index) }
-            .untilDead()*/
     }
 
     companion object {

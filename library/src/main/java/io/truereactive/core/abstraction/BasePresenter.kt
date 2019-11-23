@@ -46,8 +46,8 @@ internal interface BaseHost<VE : ViewEvents, M> : PresenterHost<VE, M>, ViewEven
 data class ViewChannel<VE : ViewEvents, M>(
     internal val savedState: Observable<Bundle>,
     val state: Observable<ViewState>,
-    val viewEvents: Observable<VE>,
-    val renderer: Observable<Optional<out Renderer<M>>> // TODO use weakRef?
+    internal val viewEvents: Observable<VE>,
+    internal val renderer: Observable<Optional<out Renderer<M>>> // TODO use weakRef?
 )
 
 internal interface PresenterHost<VE : ViewEvents, M> {
