@@ -19,6 +19,8 @@ ext {
     glideVersion = '4.10.0'
     shimmerVersion = '0.5.0'
     lottieVersion = '3.0.7'
+    materialVersion = '1.2.0-alpha01'
+    rxbindingVersion = '3.1.0'
 
     roomVersion = '2.1.0'
 
@@ -27,7 +29,6 @@ ext {
     retrofitVersion = '2.6.1'
 
     daggerVersion = '2.24'
-    toothpickVersion = '3.1.0'
 
     mockitoVersion = '2.24.0'
     mockitoKotlinVersion = '2.1.0'
@@ -44,27 +45,24 @@ ext {
     ]
 
     javaDependencies = [
-            kotlin           : "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version",
-            kotlinReflect    : "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
-            coroutinesCore   : "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion",
-            coroutinesRx     : "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$coroutinesVersion",
+            kotlin        : "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version",
+            kotlinReflect : "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
+            coroutinesCore: "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion",
+            coroutinesRx  : "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$coroutinesVersion",
 
-            moshi            : "com.squareup.moshi:moshi:$moshiVersion",
-            moshiKotlin      : "com.squareup.moshi:moshi-kotlin:$moshiVersion",
-            moshiCodegen     : "com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion",
-            okHttp           : "com.squareup.okhttp3:okhttp:$okHttpVersion",
-            retrofit         : "com.squareup.retrofit2:retrofit:$retrofitVersion",
-            moshiRetrofit    : "com.squareup.retrofit2:converter-moshi:$retrofitVersion",
-            okHttpLogging    : "com.squareup.okhttp3:logging-interceptor:$okHttpVersion",
+            moshi         : "com.squareup.moshi:moshi:$moshiVersion",
+            moshiKotlin   : "com.squareup.moshi:moshi-kotlin:$moshiVersion",
+            moshiCodegen  : "com.squareup.moshi:moshi-kotlin-codegen:$moshiVersion",
+            okHttp        : "com.squareup.okhttp3:okhttp:$okHttpVersion",
+            retrofit      : "com.squareup.retrofit2:retrofit:$retrofitVersion",
+            moshiRetrofit : "com.squareup.retrofit2:converter-moshi:$retrofitVersion",
+            okHttpLogging : "com.squareup.okhttp3:logging-interceptor:$okHttpVersion",
 
-            dagger           : "com.google.dagger:dagger:$daggerVersion",
-            daggerCompiler   : "com.google.dagger:dagger-compiler:$daggerVersion",
+            dagger        : "com.google.dagger:dagger:$daggerVersion",
+            daggerCompiler: "com.google.dagger:dagger-compiler:$daggerVersion",
 
-            toothpick        : "com.github.stephanenicolas.toothpick:ktp:$toothpickVersion",
-            toothpickCompiler: "com.github.stephanenicolas.toothpick:toothpick-compiler:$toothpickVersion",
-
-            javax            : "javax.inject:javax.inject:1",
-            rxJava           : "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
+            javax         : "javax.inject:javax.inject:1",
+            rxJava        : "io.reactivex.rxjava2:rxjava:$rxJavaVersion"
     ]
 
     testDependencies = [
@@ -81,12 +79,10 @@ ext {
             cardView             : "com.android.support:cardview-v7:$supportVersion",
             snakbar              : "com.android.support:design:$supportVersion",
 
-            // viewmodel            : "android.arch.lifecycle:viewmodel:$lifecycleVersion",
-            // lifecycleExtensions  : "android.arch.lifecycle:extensions:$lifecycleVersion",
-            recyclerView         : "com.android.support:recyclerview-v7:$supportVersion",
             core                 : "androidx.core:core-ktx:$appCompat",
             appcompat            : "androidx.appcompat:appcompat:$appCompat",
             recycler             : "androidx.recyclerview:recyclerview:$recycler",
+            material             : "com.google.android.material:material:$materialVersion",
 
             retrofitRxJavaAdapter: "com.squareup.retrofit2:adapter-rxjava2:$retrofitVersion",
             rxAndroid            : "io.reactivex.rxjava2:rxandroid:$rxAndroidVersion",
@@ -97,6 +93,9 @@ ext {
             roomRuntime          : "androidx.room:room-runtime:$roomVersion",
             roomCompiler         : "androidx.room:room-compiler:$roomVersion",
             roomRx               : "androidx.room:room-rxjava2:$roomVersion",
+            rxBinding            : "com.jakewharton.rxbinding3:rxbinding:$rxbindingVersion",
+            rxBindingMaterial    : "com.jakewharton.rxbinding3:rxbinding-material:$rxbindingVersion",
+            rxBindingAppcompat   : "com.jakewharton.rxbinding3:rxbinding-appcompat:$rxbindingVersion",
 
             coroutinesAndroid    : "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion",
 
@@ -129,9 +128,6 @@ ext {
             [configuration: "implementation", dependency: javaDependencies.dagger],
             [configuration: "kapt", dependency: javaDependencies.daggerCompiler],
 
-            // [configuration: "implementation", dependency: javaDependencies.toothpick],
-            // [configuration: "kapt", dependency: javaDependencies.toothpickCompiler],
-
             [configuration: "implementation", dependency: javaDependencies.javax],
             [configuration: "implementation", dependency: javaDependencies.rxJava],
             [configuration: "implementation", dependency: androidDependencies.rxAndroid],
@@ -139,14 +135,14 @@ ext {
             [configuration: "implementation", dependency: androidDependencies.constraintLayout],
             [configuration: "implementation", dependency: androidDependencies.cardView],
 
-            // [configuration: "implementation", dependency: androidDependencies.viewmodel],
-            // [configuration: "implementation", dependency: androidDependencies.lifecycleExtensions],
-
             [configuration: "implementation", dependency: androidDependencies.appcompat],
-            [configuration: "implementation", dependency: androidDependencies.recyclerView],
             [configuration: "implementation", dependency: androidDependencies.snakbar],
             [configuration: "implementation", dependency: androidDependencies.shimmer],
             [configuration: "implementation", dependency: androidDependencies.lottie],
+            [configuration: "implementation", dependency: androidDependencies.material],
+            [configuration: "implementation", dependency: androidDependencies.rxBinding],
+            [configuration: "implementation", dependency: androidDependencies.rxBindingMaterial],
+            [configuration: "implementation", dependency: androidDependencies.rxBindingAppcompat],
 
             [configuration: "implementation", dependency: androidDependencies.timber],
             [configuration: "implementation", dependency: androidDependencies.glide],

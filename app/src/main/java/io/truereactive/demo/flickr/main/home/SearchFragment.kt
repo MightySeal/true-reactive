@@ -4,26 +4,21 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
+import com.jakewharton.rxbinding3.appcompat.SearchViewQueryTextEvent
+import com.jakewharton.rxbinding3.appcompat.queryTextChangeEvents
 import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.truereactive.core.abstraction.BaseFragment
 import io.truereactive.core.abstraction.BasePresenter
 import io.truereactive.core.abstraction.ViewChannel
 import io.truereactive.core.reactiveui.ViewEvents
-import io.truereactive.core.reactiveui.logLifecycle
-import io.truereactive.core.viewbinding.input
 import io.truereactive.demo.flickr.FlickrApplication
 import io.truereactive.demo.flickr.R
 import io.truereactive.demo.flickr.data.domain.PhotoModel
 import io.truereactive.demo.flickr.data.repository.PhotosRepository
 import kotlinx.android.synthetic.main.fragment_flickr_search.*
-import kotlinx.android.synthetic.main.fragment_flickr_search.view.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.rx2.asObservable
-import timber.log.Timber
 import javax.inject.Inject
 
 class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
@@ -45,11 +40,16 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
         args: Bundle?,
         savedState: Bundle?
     ): BasePresenter {
-        (requireActivity().application as FlickrApplication).appComponent.searchComponent().create().inject(this)
+        (requireActivity().application as FlickrApplication).appComponent.searchComponent().create()
+            .inject(this)
         return SearchPresenter(viewChannel, photosRepository)
     }
 
-    override fun createViewHolder(view: View): SearchEvents = SearchEvents(view)
+    override fun createViewHolder(view: View): SearchEvents {
+        val searchItem = bar.menu.findItem(R.id.action_search)
+        val searchView = searchItem.actionView as SearchView
+        return SearchEvents(view, searchView)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -62,6 +62,9 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
 
         photosList.layoutManager = GridLayoutManager(requireContext(), 2)
         photosList.adapter = photosAdapter
+
+        bar.replaceMenu(R.menu.home_menu)
+
     }
 
     companion object {
@@ -69,8 +72,8 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
     }
 }
 
-class SearchEvents(view: View) : ViewEvents {
-    val searchInput: Observable<String> = view.search.input()
+class SearchEvents(view: View, searchView: SearchView) : ViewEvents {
+    val searchInput: Observable<SearchViewQueryTextEvent> = searchView.queryTextChangeEvents()
 }
 
 data class SearchState(

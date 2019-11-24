@@ -1,5 +1,6 @@
 package io.truereactive.demo.flickr.main.home
 
+import com.jakewharton.rxbinding3.appcompat.SearchViewQueryTextEvent
 import io.truereactive.core.abstraction.BasePresenter
 import io.truereactive.core.abstraction.ViewChannel
 import io.truereactive.core.reactiveui.renderWhileAlive
@@ -15,12 +16,13 @@ class SearchPresenter(
     init {
         channel
             .viewEventsUntilDead { searchInput }
+            .map(SearchViewQueryTextEvent::queryText)
             .throttleLast(200, TimeUnit.MILLISECONDS)
             .startWith("")
             .distinctUntilChanged()
             .switchMapSingle {
                 if (it.isNotBlank()) {
-                    repository.search(it)
+                    repository.search(it.toString())
                 } else {
                     repository.getRecent()
                 }

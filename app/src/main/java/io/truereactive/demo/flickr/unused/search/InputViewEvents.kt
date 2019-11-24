@@ -1,14 +1,11 @@
 package io.truereactive.demo.flickr.unused.search
 
 import android.view.View
-import io.truereactive.core.reactiveui.ViewEvents
-import io.truereactive.core.viewbinding.input
+import com.jakewharton.rxbinding3.widget.textChanges
 import io.reactivex.Observable
-import io.truereactive.core.viewbinding.inputFlow
+import io.truereactive.core.reactiveui.ViewEvents
 import kotlinx.android.synthetic.main.fragment_search.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.rx2.asObservable
 
 @ExperimentalCoroutinesApi
 class InputViewEvents(
@@ -16,5 +13,5 @@ class InputViewEvents(
     val openDetails: (String) -> Unit
 ) : ViewEvents {
     val searchInput: Observable<String> =
-        view.searchInput.inputFlow().distinctUntilChanged().asObservable()
+        view.searchInput.textChanges().map(CharSequence::toString)
 }
