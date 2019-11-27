@@ -43,17 +43,18 @@ sealed class ViewState(val name: String) {
 
 val ViewState.isAlive: Boolean
     get() = when(this) {
-        ViewState.Created -> true
-        ViewState.Started -> true
+        ViewState.Created,
+        ViewState.Started,
         ViewState.Resumed -> true
-        ViewState.Paused -> false
-        ViewState.Stopped -> false
-        ViewState.SavingState -> false
-        ViewState.Destroyed -> false
+
+        ViewState.Paused,
+        ViewState.Stopped,
+        ViewState.SavingState,
+        ViewState.Destroyed,
         ViewState.Dead -> false
     }
 
-fun aliveStateChanged(first: ViewState, second: ViewState): Boolean =
+internal fun aliveStateChanged(first: ViewState, second: ViewState): Boolean =
     !(first.isAlive xor second.isAlive)
 
 internal fun <VE : ViewEvents, M, AVS : AndroidViewState<VE, M>> aliveStateChanged(

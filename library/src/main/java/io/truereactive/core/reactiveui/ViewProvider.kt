@@ -79,11 +79,16 @@ fun <VE : ViewEvents, M> Observable<M>.renderWhileAlive(channel: ViewChannel<VE,
 
 
 // TODO: REVIEW
-fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(block: VE.() -> Observable<T>): Observable<T> {
+/**
+ *
+ *  Creates a stream of events of type T which is completed when the view is destroyed permanently.
+ *  @param selector selector for desired event stream
+ *  @return Observable<T> of type T that reflects selected stream across any config changes, recreations, except process death.
+ *
+ */
+fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(selector: VE.() -> Observable<T>): Observable<T> {
     return this.viewEvents
-        .switchMap {
-            it.let(block)
-        }
+        .switchMap(selector)
         .takeUntil(this.state.filter { it == ViewState.Dead })
 }
 

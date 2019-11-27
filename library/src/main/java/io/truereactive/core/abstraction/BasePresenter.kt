@@ -14,8 +14,13 @@ import java.util.*
 
 
 // TODO: consider providing function like
-//  fun logic(events: Observable<SearchViewEvents>, disposable)
+//  fun logic(events: Observable<SearchViewEvents>, disposable: CompositeDisposable)
 //  so the object construction is predictable
+
+/**
+ * The base presenter
+ *
+ */
 abstract class BasePresenter() {
     internal val disposable = CompositeDisposable()
 
@@ -42,7 +47,13 @@ interface Renderer<M> {
 internal interface BaseHost<VE : ViewEvents, M> : PresenterHost<VE, M>, ViewEventsHost<VE>,
     ViewDelegate<VE>, Renderer<M>
 
-// TODO: Internal doesn't allow using destructuring declaration
+/**
+ * A reactive representation of a view.
+ * @param savedState saved state
+ * @param state an observable view state (Created, Resumed, Paused, etc.). Emits current state upon subscription.
+ * @param viewEvents a stream of events from view like text input, button clicks, etc.
+ * @param renderer a instance which renders desired data.
+ */
 data class ViewChannel<VE : ViewEvents, M>(
     internal val savedState: Observable<Bundle>,
     val state: Observable<ViewState>,

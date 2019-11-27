@@ -183,24 +183,23 @@ ext {
             [configuration: "testImplementation", dependency: testDependencies.mockito],
             [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
     ]
-    coreDependencies = [
-            [configuration: "implementation", dependency: javaDependencies.kotlin],
-            [configuration: "implementation", dependency: javaDependencies.kotlinReflect],
-            [configuration: "implementation", dependency: javaDependencies.coroutinesCore],
-            [configuration: "implementation", dependency: javaDependencies.coroutinesRx],
-            [configuration: "implementation", dependency: androidDependencies.coroutinesAndroid],
+    libraryDependencies = [
+            [configuration: "api", dependency: javaDependencies.kotlin],
+            [configuration: "api", dependency: javaDependencies.kotlinReflect],
+            [configuration: "api", dependency: javaDependencies.coroutinesCore],
+            [configuration: "api", dependency: javaDependencies.coroutinesRx],
+            [configuration: "api", dependency: androidDependencies.coroutinesAndroid],
 
-            [configuration: "implementation", dependency: androidDependencies.timber],
-            [configuration: "implementation", dependency: javaDependencies.rxJava],
-            [configuration: "implementation", dependency: androidDependencies.rxAndroid],
+            [configuration: "api", dependency: androidDependencies.timber],
+            [configuration: "api", dependency: javaDependencies.rxJava],
+            [configuration: "api", dependency: androidDependencies.rxAndroid],
+
+            [configuration: "api", dependency: androidDependencies.appcompat],
+            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary],
 
             [configuration: "testImplementation", dependency: testDependencies.robolectric],
             [configuration: "testImplementation", dependency: testDependencies.junit],
             [configuration: "testImplementation", dependency: testDependencies.mockito],
-            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
-
-            [configuration: "implementation", dependency: androidDependencies.appcompat],
-
-            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary]
+            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin]
     ]
 }
