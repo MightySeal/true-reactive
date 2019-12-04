@@ -415,9 +415,16 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             .takeUntil { it.state == ViewState.Dead }
             .share()
 
+        // TODO: Probably no need in replay + optional, just publish
         val savedState = state
-            .filter { it.savedInstanceState != null }
-            .map { it.savedInstanceState!! }
+            .distinctUntilChanged()
+            .map {
+                if (it.savedInstanceState == null) {
+                    Optional(null)
+                } else {
+                    Optional(it.savedInstanceState)
+                }
+            }
             .replay(1)
 
         val hostState = state.map { it.state }
@@ -428,9 +435,11 @@ class ReactiveApp(app: Application) : ReactiveApplication {
 
         val viewEvents = viewState
             .filter { it.view != null }
+            .distinctUntilChanged(::aliveStateChanged)
             .map { vs -> vs.host.createViewHolder(vs.view!!) }
             .replay(1)
 
+        // TODO: Probably no need in replay + optional, just publish
         val renderer = viewState
             .distinctUntilChanged(::aliveStateChanged)
             .map { vs ->

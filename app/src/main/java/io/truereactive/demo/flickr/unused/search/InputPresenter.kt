@@ -3,7 +3,6 @@ package io.truereactive.demo.flickr.unused.search
 import io.reactivex.functions.BiFunction
 import io.truereactive.core.abstraction.BasePresenter
 import io.truereactive.core.abstraction.ViewChannel
-import io.truereactive.core.reactiveui.logLifecycle
 import io.truereactive.core.reactiveui.mapUntilDead
 import io.truereactive.core.reactiveui.renderWhileAlive
 import io.truereactive.core.reactiveui.viewEventsUntilDead
@@ -17,12 +16,6 @@ class InputPresenter @Inject constructor(
 ) : BasePresenter() {
 
     init {
-        viewChannel
-            .viewEventsUntilDead { searchInput }
-            .subscribe {
-                Timber.i("Input $it")
-            }.untilDead()
-
         val mirror = viewChannel
             .viewEventsUntilDead { searchInput }
             .map { SearchModel(it.toString()) }
@@ -42,7 +35,6 @@ class InputPresenter @Inject constructor(
                     )
                 }
             )
-            .logLifecycle("==== Search navigation")
             .subscribe({
                 it.first(it.second)
             }, {

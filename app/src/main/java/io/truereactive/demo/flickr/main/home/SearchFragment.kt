@@ -16,8 +16,9 @@ import io.truereactive.core.abstraction.ViewChannel
 import io.truereactive.core.reactiveui.ViewEvents
 import io.truereactive.demo.flickr.FlickrApplication
 import io.truereactive.demo.flickr.R
-import io.truereactive.demo.flickr.data.domain.PhotoModel
-import io.truereactive.demo.flickr.data.repository.PhotosRepository
+import io.truereactive.demo.flickr.common.data.device.NetworkStateRepository
+import io.truereactive.demo.flickr.common.data.domain.PhotoModel
+import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
 import kotlinx.android.synthetic.main.fragment_flickr_search.*
 import javax.inject.Inject
 
@@ -25,6 +26,9 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
 
     @Inject
     lateinit var photosRepository: PhotosRepository
+
+    @Inject
+    lateinit var networkStateRepository: NetworkStateRepository
 
     private val photosAdapter by lazy(LazyThreadSafetyMode.NONE) {
         val requestManager = Glide.with(this)
@@ -42,7 +46,12 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
     ): BasePresenter {
         (requireActivity().application as FlickrApplication).appComponent.searchComponent().create()
             .inject(this)
-        return SearchPresenter(viewChannel, photosRepository)
+        return SearchPresenter(
+            viewChannel,
+            photosRepository,
+            networkStateRepository,
+            savedState?.getString(SearchPresenter.INITIAL_STATE_KEY)
+        )
     }
 
     override fun createViewHolder(view: View): SearchEvents {
@@ -74,6 +83,8 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
 
 class SearchEvents(view: View, searchView: SearchView) : ViewEvents {
     val searchInput: Observable<SearchViewQueryTextEvent> = searchView.queryTextChangeEvents()
+        .skipInitialValue()
+        .share()
 }
 
 data class SearchState(

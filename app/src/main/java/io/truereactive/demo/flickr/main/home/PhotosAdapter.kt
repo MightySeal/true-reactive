@@ -10,7 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestManager
 import io.truereactive.demo.flickr.R
 import io.truereactive.demo.flickr.common.BaseRecyclerAdapter
-import io.truereactive.demo.flickr.data.domain.PhotoModel
+import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import kotlinx.android.synthetic.main.list_item_photo.view.*
 
 class PhotosAdapter(private val context: Context,

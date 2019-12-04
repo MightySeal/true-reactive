@@ -9,7 +9,6 @@ import io.truereactive.core.abstraction.BasePresenter
 import io.truereactive.core.abstraction.ViewChannel
 import io.truereactive.demo.flickr.R
 import kotlinx.android.synthetic.main.fragment_details.*
-import timber.log.Timber
 
 class DetailsFragment : BaseFragment<DetailsViewEvents, String>() {
 
@@ -18,7 +17,6 @@ class DetailsFragment : BaseFragment<DetailsViewEvents, String>() {
         args: Bundle?,
         savedState: Bundle?
     ): BasePresenter {
-        Timber.i("Create presenter, saved state: ${savedState?.getLong(DetailsPresenter.TIME_KEY)}")
         return DetailsPresenter(
             viewChannel,
             args?.getString(TEXT_KEY)!!,

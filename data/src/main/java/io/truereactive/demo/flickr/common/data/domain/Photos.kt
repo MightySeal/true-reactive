@@ -1,4 +1,4 @@
-package io.truereactive.demo.flickr.data.domain
+package io.truereactive.demo.flickr.common.data.domain
 
 data class PhotoModel(
     val id: String,

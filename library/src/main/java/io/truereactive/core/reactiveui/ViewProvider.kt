@@ -7,30 +7,30 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
-import io.reactivex.functions.Function3
 import io.truereactive.core.abstraction.*
-import timber.log.Timber
 
 interface ViewEvents
 
-// TODO: not working
+// TODO: this is async now, so the actual write can be after this bundle is persisted.
+//  Need to synchronize with saveInstanceState somehow.
 fun <VE : ViewEvents, M, D> Observable<D>.saveState(
     channel: ViewChannel<VE, M>,
     invoke: (Bundle, D) -> Unit
 ): Disposable {
 
     return Observable.combineLatest(
-        channel.state,
         channel.savedState,
         this,
-        Function3 { state: ViewState, bundle: Bundle, data: D ->
-            Triple(state, bundle, data)
+        BiFunction { bundle: Optional<out Bundle>, data: D ->
+            Pair(bundle, data)
         }
-    ).takeUntil { it.first == ViewState.Dead }
-        .firstElement()
+    ).takeUntil(channel.state.filter { it == ViewState.Dead })
         .observeOn(AndroidSchedulers.mainThread())
-        .subscribe { (viewState, bundle, data) ->
-            Timber.i("Save state $data, state: $viewState")
+        .filter { values: Pair<Optional<out Bundle>, D> ->
+            values.first.value != null
+        }.map {
+            Pair(it.first.value!!, it.second)
+        }.subscribe { (bundle, data) ->
             invoke(bundle, data)
         }
 }
@@ -61,6 +61,15 @@ fun <VE : ViewEvents, M> Observable<M>.renderWhileActive(channel: ViewChannel<VE
         }
 }
 
+/**
+ *
+ *  Renders this observable when the view is ready and until the view is permanently destroyed.
+ *
+ *
+ *  @param channel ViewChannel for this view
+ *  @return Disposable for this stream
+ *
+ */
 fun <VE : ViewEvents, M> Observable<M>.renderWhileAlive(channel: ViewChannel<VE, M>): Disposable {
     return Observable.combineLatest(
         channel.renderer,

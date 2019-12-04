@@ -9,7 +9,6 @@ import io.truereactive.demo.flickr.R
 import io.truereactive.demo.flickr.unused.details.DetailsFragment
 import io.truereactive.demo.flickr.unused.search.SearchFragment
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import timber.log.Timber
 
 @ExperimentalCoroutinesApi
 class MainActivity : BaseActivity<MainViewEvents, Unit>() {
@@ -28,16 +27,6 @@ class MainActivity : BaseActivity<MainViewEvents, Unit>() {
 
     override fun render(model: Unit) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Timber.i("Activity stopped")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Timber.i("Activity destroyed")
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

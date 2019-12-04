@@ -55,7 +55,7 @@ internal interface BaseHost<VE : ViewEvents, M> : PresenterHost<VE, M>, ViewEven
  * @param renderer a instance which renders desired data.
  */
 data class ViewChannel<VE : ViewEvents, M>(
-    internal val savedState: Observable<Bundle>,
+    internal val savedState: Observable<Optional<out Bundle>>,
     val state: Observable<ViewState>,
     internal val viewEvents: Observable<VE>,
     internal val renderer: Observable<Optional<out Renderer<M>>> // TODO use weakRef?

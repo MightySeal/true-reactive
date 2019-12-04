@@ -1,6 +1,6 @@
-package io.truereactive.demo.flickr.data.domain
+package io.truereactive.demo.flickr.common.data.domain
 
-import io.truereactive.demo.flickr.data.api.model.FlickrPhoto
+import io.truereactive.demo.flickr.common.data.api.model.FlickrPhoto
 
 internal fun FlickrPhoto.toDomain(): PhotoModel = PhotoModel(
     id = id,

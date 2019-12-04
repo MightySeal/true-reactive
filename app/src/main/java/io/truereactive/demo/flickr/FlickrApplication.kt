@@ -2,7 +2,7 @@ package io.truereactive.demo.flickr
 
 import android.app.Application
 import io.truereactive.core.reactiveui.ReactiveApp
-import io.truereactive.demo.flickr.data.di.DaggerNetworkComponent
+import io.truereactive.demo.flickr.common.data.di.DaggerDataComponent
 import io.truereactive.demo.flickr.di.ApplicationComponent
 import io.truereactive.demo.flickr.di.DaggerApplicationComponent
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,7 +22,7 @@ open class FlickrApplication : Application() {
         super.onCreate()
 
         appComponent = DaggerApplicationComponent.factory()
-            .create(this, DaggerNetworkComponent.factory().create())
+            .create(this, DaggerDataComponent.factory().create(this))
 
         reactiveApp = ReactiveApp(this)
     }

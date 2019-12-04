@@ -1,13 +1,11 @@
-package io.truereactive.demo.flickr.data.repository
+package io.truereactive.demo.flickr.common.data.repository
 
 import io.reactivex.Single
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
-import io.truereactive.demo.flickr.data.api.FlickrApi
-import io.truereactive.demo.flickr.data.api.model.FlickrPhoto
-import io.truereactive.demo.flickr.data.api.model.PhotosResponse
-import io.truereactive.demo.flickr.data.domain.PhotoModel
-import io.truereactive.demo.flickr.data.domain.toDomain
+import io.truereactive.demo.flickr.common.data.api.FlickrApi
+import io.truereactive.demo.flickr.common.data.api.model.FlickrPhoto
+import io.truereactive.demo.flickr.common.data.domain.PhotoModel
+import io.truereactive.demo.flickr.common.data.domain.toDomain
 import javax.inject.Inject
 import javax.inject.Singleton
 

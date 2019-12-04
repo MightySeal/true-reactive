@@ -35,7 +35,7 @@ ext {
     junitVersion = '4.12'
     robolectricVersion = '4.3'
 
-    leakCanary = '2.0-beta-4'
+    leakCanary = '2.0'
 
 
     modules = [
