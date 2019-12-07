@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">True reactive test</string>
+    <string name="leak_canary_display_activity_label">True reactive leaks</string>
+</resources>

@@ -11,6 +11,11 @@ import io.truereactive.core.abstraction.*
 
 interface ViewEvents
 
+// TODO: provide a context for it (multireceivers could help a lot here)
+//   interface ViewScope {
+//      <VE : ViewEvents, M, D>.doSomething()
+//   }
+
 // TODO: this is async now, so the actual write can be after this bundle is persisted.
 //  Need to synchronize with saveInstanceState somehow.
 fun <VE : ViewEvents, M, D> Observable<D>.saveState(

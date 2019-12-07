@@ -33,7 +33,9 @@ ext {
     mockitoVersion = '2.24.0'
     mockitoKotlinVersion = '2.1.0'
     junitVersion = '4.12'
+    junitKtxVersion = '1.1.2-alpha03'
     robolectricVersion = '4.3'
+    testCoreVersion = '1.3.0-alpha03'
 
     leakCanary = '2.0'
 
@@ -69,7 +71,13 @@ ext {
             mockito      : "org.mockito:mockito-core:$mockitoVersion",
             mockitoKotlin: "com.nhaarman.mockitokotlin2:mockito-kotlin:$mockitoKotlinVersion",
             junit        : "junit:junit:$junitVersion",
+            junitKtx     : "androidx.test.ext:junit-ktx:$junitKtxVersion",
             robolectric  : "org.robolectric:robolectric:$robolectricVersion"
+    ]
+
+    androidTestDependencies = [
+            testCore: "androidx.test:core-ktx:$testCoreVersion",
+            testRunner: "androidx.test:runner:$testCoreVersion"
     ]
 
 
@@ -200,6 +208,16 @@ ext {
             [configuration: "testImplementation", dependency: testDependencies.robolectric],
             [configuration: "testImplementation", dependency: testDependencies.junit],
             [configuration: "testImplementation", dependency: testDependencies.mockito],
-            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin]
+            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
+
+            [configuration: "androidTestImplementation", dependency: testDependencies.junit],
+            [configuration: "androidTestImplementation", dependency: testDependencies.junitKtx],
+
+            [configuration: "androidTestImplementation", dependency: androidTestDependencies.testCore],
+            [configuration: "androidTestImplementation", dependency: androidTestDependencies.testRunner],
+
+            [configuration: "androidTestImplementation", dependency: androidDependencies.rxBinding],
+            [configuration: "androidTestImplementation", dependency: androidDependencies.rxBindingMaterial],
+            [configuration: "androidTestImplementation", dependency: androidDependencies.rxBindingAppcompat],
     ]
 }

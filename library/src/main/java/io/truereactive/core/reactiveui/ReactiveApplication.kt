@@ -53,7 +53,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                         emitter.onNext(
                             ActivityViewState(
                                 host = baseActivity,
-                                view = activity.window.decorView.rootView,
+                                // view = activity.window.decorView.rootView,
+                                view = null,
                                 state = ViewState.Created,
                                 key = baseActivity.viewIdKey
                             )
