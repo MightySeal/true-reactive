@@ -63,8 +63,8 @@ internal abstract class NetworkModule {
                         return chain.proceed(newRequest)
                     }
                 }).addInterceptor(HttpLoggingInterceptor().apply {
-                    // level = HttpLoggingInterceptor.Level.BODY
-                    level = HttpLoggingInterceptor.Level.BASIC
+                    level = HttpLoggingInterceptor.Level.BODY
+                    // level = HttpLoggingInterceptor.Level.BASIC
                 })
                 .build()
         }

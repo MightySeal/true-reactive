@@ -6,6 +6,7 @@ import io.truereactive.demo.flickr.common.data.api.FlickrApi
 import io.truereactive.demo.flickr.common.data.api.model.FlickrPhoto
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.common.data.domain.toDomain
+import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -22,4 +23,14 @@ class PhotosRepository @Inject internal constructor(
         .map { it.photos.photoList.map(FlickrPhoto::toDomain) }
         .subscribeOn(Schedulers.io())
 
+    fun getInfo(id: String): Single<PhotoModel> = networkApi.getInfo(id)
+        .map {
+            it.photo.toDomain().also {
+                Timber.i("------------ $it")
+            }
+        }
+        .subscribeOn(Schedulers.io())
+
+
+    // fun getImageSizes(id: String): Unit = networkApi.getImageSizes(id)
 }

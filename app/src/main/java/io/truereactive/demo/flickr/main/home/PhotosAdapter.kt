@@ -13,13 +13,20 @@ import io.truereactive.demo.flickr.common.BaseRecyclerAdapter
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import kotlinx.android.synthetic.main.list_item_photo.view.*
 
-class PhotosAdapter(private val context: Context,
-                    private val glide: RequestManager): BaseRecyclerAdapter<PhotoVH, PhotoModel>() {
+class PhotosAdapter(
+    private val context: Context,
+    private val glide: RequestManager,
+    private val onClick: (PhotoModel) -> Unit
+) : BaseRecyclerAdapter<PhotoVH, PhotoModel>() {
 
     private val inflater = LayoutInflater.from(context)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoVH {
-        return PhotoVH(inflater.inflate(R.layout.list_item_photo, parent, false))
+        return PhotoVH(inflater.inflate(R.layout.list_item_photo, parent, false)).apply {
+            view.setOnClickListener {
+                onClick(data[adapterPosition])
+            }
+        }
     }
 
     override fun onBindViewHolder(holder: PhotoVH, position: Int) {
@@ -35,7 +42,7 @@ class PhotosAdapter(private val context: Context,
     }
 }
 
-class PhotoVH(view: View): RecyclerView.ViewHolder(view) {
+class PhotoVH(val view: View) : RecyclerView.ViewHolder(view) {
     val image: ImageView = view.image
     val title: TextView = view.title
 }

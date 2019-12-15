@@ -20,8 +20,6 @@ class SearchPresenter(
 ) : BasePresenter() {
 
     init {
-
-
         channel
             .viewEventsUntilDead { searchInput }
             .map(SearchViewQueryTextEvent::queryText)
@@ -44,7 +42,6 @@ class SearchPresenter(
 
         channel
             .viewEventsUntilDead { searchInput }
-            .observeOn(Schedulers.computation())
             .map { it.queryText }
             .saveState(channel) { bundle, text ->
                 bundle.putString(INITIAL_STATE_KEY, text.toString())

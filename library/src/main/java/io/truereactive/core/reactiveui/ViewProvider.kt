@@ -7,6 +7,7 @@ import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
+import io.reactivex.schedulers.Schedulers
 import io.truereactive.core.abstraction.*
 
 interface ViewEvents
@@ -15,6 +16,25 @@ interface ViewEvents
 //   interface ViewScope {
 //      <VE : ViewEvents, M, D>.doSomething()
 //   }
+interface ViewScope {
+
+    fun <VE : ViewEvents, M> Observable<M>.renderWhileAlive(channel: ViewChannel<VE, M>): Disposable {
+        return Observable.combineLatest(
+            channel.renderer,
+            this,
+            BiFunction { renderer: Optional<out Renderer<M>>, data: M ->
+                Pair(renderer, data)
+            }
+        ).takeUntil(channel.state.filter { it == ViewState.Dead })
+            .filter { it.first.value != null }
+            .map { Pair(it.first.value!!, it.second) }
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe { (renderer, data) ->
+                renderer.render(data)
+            }
+    }
+
+}
 
 // TODO: this is async now, so the actual write can be after this bundle is persisted.
 //  Need to synchronize with saveInstanceState somehow.
@@ -30,12 +50,12 @@ fun <VE : ViewEvents, M, D> Observable<D>.saveState(
             Pair(bundle, data)
         }
     ).takeUntil(channel.state.filter { it == ViewState.Dead })
-        .observeOn(AndroidSchedulers.mainThread())
         .filter { values: Pair<Optional<out Bundle>, D> ->
             values.first.value != null
         }.map {
             Pair(it.first.value!!, it.second)
-        }.subscribe { (bundle, data) ->
+        }.observeOn(AndroidSchedulers.mainThread())
+        .subscribe { (bundle, data) ->
             invoke(bundle, data)
         }
 }
@@ -103,12 +123,14 @@ fun <VE : ViewEvents, M> Observable<M>.renderWhileAlive(channel: ViewChannel<VE,
 fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(selector: VE.() -> Observable<T>): Observable<T> {
     return this.viewEvents
         .switchMap(selector)
+        .observeOn(Schedulers.computation())
         .takeUntil(this.state.filter { it == ViewState.Dead })
 }
 
 fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.mapUntilDead(block: VE.() -> T): Observable<T> {
     return this.viewEvents
         .map(block)
+        .observeOn(Schedulers.computation())
         .takeUntil(this.state.filter { it == ViewState.Dead })
 }
 

@@ -31,6 +31,15 @@ internal data class FlickrPhoto(
     @Json(name = "url_sq") val previewSquare: String // TODO: make boolean
 )
 
+@JsonClass(generateAdapter = true)
+internal data class FullFlickrPhoto(
+    @Json(name = "id") val id: String,
+    @Json(name = "secret") val secret: String,
+    @Json(name = "server") val server: String,
+    @Json(name = "farm") val farm: Int,
+    @Json(name = "urls") val urls: Urls
+)
+
 // TODO: think of inheriting FlickrResponse
 @JsonClass(generateAdapter = true)
 internal data class PhotosResponse(
@@ -47,4 +56,26 @@ internal data class FlickrPhotosResponse(
     val photos: PhotosResponse,
     @Json(name = "stat")
     val stat: String // TODO: Enum
+)
+
+@JsonClass(generateAdapter = true)
+internal data class FlickrPhotoInfoResponse(
+    @Json(name = "photo")
+    val photo: FullFlickrPhoto,
+    @Json(name = "stat")
+    val stat: String // TODO: Enum
+)
+
+@JsonClass(generateAdapter = true)
+data class Urls(
+    @Json(name = "url")
+    val urlList: List<FlickrUrl>
+)
+
+@JsonClass(generateAdapter = true)
+data class FlickrUrl(
+    @Json(name = "type")
+    val type: String,
+    @Json(name = "_content")
+    val content: String
 )

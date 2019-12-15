@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.schedulers.Schedulers
 import io.truereactive.core.abstraction.*
 import io.truereactive.core.abstraction.Optional
 import io.truereactive.library.BuildConfig
@@ -416,8 +417,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             .takeUntil { it.state == ViewState.Dead }
             .share()
 
-        // TODO: Probably no need in replay + optional, just publish
         val savedState = state
+            .observeOn(Schedulers.computation())
             .distinctUntilChanged()
             .map {
                 if (it.savedInstanceState == null) {
@@ -428,7 +429,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             }
             .replay(1)
 
-        val hostState = state.map { it.state }
+        val hostState = state
+            .map { it.state }
             .replay(1)
 
         val viewState = state
@@ -440,7 +442,6 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             .map { vs -> vs.host.createViewHolder(vs.view!!) }
             .replay(1)
 
-        // TODO: Probably no need in replay + optional, just publish
         val renderer = viewState
             .distinctUntilChanged(::aliveStateChanged)
             .map { vs ->
@@ -454,7 +455,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
 
         val viewChannel = ViewChannel(
             savedState = savedState,
-            state = hostState,
+            state = hostState.observeOn(Schedulers.computation()),
             viewEvents = viewEvents,
             renderer = renderer
         )

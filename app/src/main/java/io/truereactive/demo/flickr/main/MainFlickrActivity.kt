@@ -7,12 +7,13 @@ import io.truereactive.core.abstraction.BasePresenter
 import io.truereactive.core.abstraction.ViewChannel
 import io.truereactive.core.reactiveui.ViewEvents
 import io.truereactive.demo.flickr.R
+import io.truereactive.demo.flickr.common.data.domain.PhotoModel
+import io.truereactive.demo.flickr.main.details.ImageDetailsFragment
 import io.truereactive.demo.flickr.main.home.SearchFragment
 
 class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
-    override fun render(model: Unit) {
 
-    }
+    override fun render(model: Unit) {}
 
     override fun createPresenter(
         viewChannel: ViewChannel<MainFlickrEvents, Unit>,
@@ -31,11 +32,18 @@ class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
         setContentView(R.layout.activity_flickr)
     }
 
+    fun openDetails(photoModel: PhotoModel) {
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.container, ImageDetailsFragment.newInstance(photoModel.id), null)
+            .addToBackStack(null)
+            .commit()
+    }
+
     private fun openPopular() {
         supportFragmentManager
             .beginTransaction()
             .replace(R.id.container, SearchFragment.newInstance(), null)
-            // .replace(R.id.container, io.truereactive.demo.flickr.unused.search.SearchFragment(), null)
             .commit()
     }
 }

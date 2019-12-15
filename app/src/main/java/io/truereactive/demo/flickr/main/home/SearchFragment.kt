@@ -19,6 +19,7 @@ import io.truereactive.demo.flickr.R
 import io.truereactive.demo.flickr.common.data.device.NetworkStateRepository
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
+import io.truereactive.demo.flickr.main.MainFlickrActivity
 import kotlinx.android.synthetic.main.fragment_flickr_search.*
 import javax.inject.Inject
 
@@ -32,7 +33,9 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
 
     private val photosAdapter by lazy(LazyThreadSafetyMode.NONE) {
         val requestManager = Glide.with(this)
-        PhotosAdapter(requireActivity(), requestManager)
+        PhotosAdapter(requireActivity(), requestManager) {
+            (requireActivity() as MainFlickrActivity).openDetails(it)
+        }
     }
 
     override fun render(model: SearchState) {
@@ -73,7 +76,6 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
         photosList.adapter = photosAdapter
 
         bar.replaceMenu(R.menu.home_menu)
-
     }
 
     companion object {
