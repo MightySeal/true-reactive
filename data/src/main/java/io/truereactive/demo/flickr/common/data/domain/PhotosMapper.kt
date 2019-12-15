@@ -2,6 +2,7 @@ package io.truereactive.demo.flickr.common.data.domain
 
 import io.truereactive.demo.flickr.common.data.api.model.FlickrPhoto
 import io.truereactive.demo.flickr.common.data.api.model.FullFlickrPhoto
+import io.truereactive.demo.flickr.common.data.api.model.ImageSize
 
 internal fun FlickrPhoto.toDomain(): PhotoModel = PhotoModel(
     id = id,
@@ -27,4 +28,10 @@ internal fun FullFlickrPhoto.toDomain(): PhotoModel = PhotoModel(
     isfriend = 1,
     isfamily = 1,
     previewSquare = urls.urlList.firstOrNull()?.content ?: ""
+)
+
+internal fun ImageSize.toDomain(): PhotoSize = PhotoSize(
+    imageWidth = width,
+    imageHeight = height,
+    staticUrl = source
 )

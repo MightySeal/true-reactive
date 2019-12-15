@@ -35,7 +35,7 @@ class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
     fun openDetails(photoModel: PhotoModel) {
         supportFragmentManager
             .beginTransaction()
-            .replace(R.id.container, ImageDetailsFragment.newInstance(photoModel.id), null)
+            .replace(R.id.container, ImageDetailsFragment.newInstance(photoModel), null)
             .addToBackStack(null)
             .commit()
     }

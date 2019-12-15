@@ -1,5 +1,7 @@
 package io.truereactive.demo.flickr.main.details
 
+import io.reactivex.Observable
+import io.reactivex.functions.BiFunction
 import io.truereactive.core.abstraction.BasePresenter
 import io.truereactive.core.abstraction.ViewChannel
 import io.truereactive.core.reactiveui.renderWhileAlive
@@ -8,13 +10,25 @@ import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
 class ImageDetailsPresenter constructor(
     viewChannel: ViewChannel<ImageDetailsEvents, ImageDetails>,
     private val repository: PhotosRepository,
-    private val imageId: String
+    private val imageId: String,
+    private val imageUrl: String
 ) : BasePresenter() {
 
     init {
-        repository.getInfo(imageId)
-            .map { photo -> ImageDetails(photo.previewSquare) }
-            .toObservable()
-            .renderWhileAlive(viewChannel)
+
+        Observable.combineLatest(
+            repository.getInfo(imageId)
+                .map<Pair<String?, String?>> { it.title to it.owner }
+                .toObservable()
+                .startWith(Pair<String?, String?>(null, null)),
+            repository.getSizes(imageId)
+                .filter { sizes -> sizes.isNotEmpty() }
+                .map { sizes -> sizes.maxBy { size -> size.imageWidth }?.staticUrl!! }
+                .toObservable()
+                .startWith(imageUrl),
+            BiFunction { description: Pair<String?, String?>, imageUrl: String ->
+                ImageDetails(imageUrl, description.first, description.second)
+            }
+        ).renderWhileAlive(viewChannel)
     }
 }

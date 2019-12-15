@@ -12,3 +12,9 @@ data class PhotoModel(
     val isfamily: Int, // TODO: make boolean
     val previewSquare: String // TODO: make boolean
 )
+
+data class PhotoSize(
+    val imageWidth: Int,
+    val imageHeight: Int,
+    val staticUrl: String
+)

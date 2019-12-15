@@ -365,7 +365,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
     private fun <VE : ViewEvents, M> die(host: BaseHost<VE, M>) {
         Timber.d("Die $host")
         PresenterCache.remove(host.viewIdKey).also {
-            Timber.i("Dispose ${it.disposable.size()} elements")
+            Timber.d("Dispose ${it.disposable.size()} elements")
             it.dispose()
         }
     }

@@ -4,9 +4,10 @@ import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import io.truereactive.demo.flickr.common.data.api.FlickrApi
 import io.truereactive.demo.flickr.common.data.api.model.FlickrPhoto
+import io.truereactive.demo.flickr.common.data.api.model.ImageSize
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
+import io.truereactive.demo.flickr.common.data.domain.PhotoSize
 import io.truereactive.demo.flickr.common.data.domain.toDomain
-import timber.log.Timber
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -24,11 +25,11 @@ class PhotosRepository @Inject internal constructor(
         .subscribeOn(Schedulers.io())
 
     fun getInfo(id: String): Single<PhotoModel> = networkApi.getInfo(id)
-        .map {
-            it.photo.toDomain().also {
-                Timber.i("------------ $it")
-            }
-        }
+        .map { it.photo.toDomain() }
+        .subscribeOn(Schedulers.io())
+
+    fun getSizes(id: String): Single<List<PhotoSize>> = networkApi.getImageSizes(id)
+        .map { it.sizes.sizes.map(ImageSize::toDomain) }
         .subscribeOn(Schedulers.io())
 
 
