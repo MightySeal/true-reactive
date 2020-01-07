@@ -8,7 +8,7 @@ import dagger.Module
 import io.truereactive.demo.flickr.FlickrApplication
 import io.truereactive.demo.flickr.common.data.di.DataComponent
 import io.truereactive.demo.flickr.main.details.di.ImageDetailsComponent
-import io.truereactive.demo.flickr.main.home.di.SearchComponent
+import io.truereactive.demo.flickr.main.home.di.HomeComponent
 import javax.inject.Scope
 
 @ApplicationComponent.AppScope
@@ -18,7 +18,7 @@ import javax.inject.Scope
 )
 interface ApplicationComponent {
 
-    fun searchComponent(): SearchComponent.Factory
+    fun homeComponent(): HomeComponent.Factory
     fun imageDetailsComponent(): ImageDetailsComponent.Factory
 
     @Component.Factory
@@ -30,7 +30,7 @@ interface ApplicationComponent {
     annotation class AppScope
 }
 
-@Module(subcomponents = [SearchComponent::class])
+@Module(subcomponents = [HomeComponent::class])
 abstract class ApplicationModule {
 
     @Binds

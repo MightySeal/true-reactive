@@ -9,10 +9,10 @@ import retrofit2.http.Query
 
 internal interface FlickrApi {
 
-    @GET("?method=flickr.photos.getRecent&extras=url_sq")
-    fun getRecent(): Single<FlickrPhotosResponse>
+    @GET("?method=flickr.photos.getRecent&extras=url_sq,url_q")
+    fun getRecent(@Query("perPage") perPage: Int): Single<FlickrPhotosResponse>
 
-    @GET("?method=flickr.photos.search&extras=url_sq")
+    @GET("?method=flickr.photos.search&extras=url_sq,url_q")
     fun search(@Query("text") search: String): Single<FlickrPhotosResponse>
 
     @GET("?method=flickr.photos.getInfo")

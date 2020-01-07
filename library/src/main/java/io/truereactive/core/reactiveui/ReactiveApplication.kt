@@ -364,6 +364,9 @@ class ReactiveApp(app: Application) : ReactiveApplication {
 
     private fun <VE : ViewEvents, M> die(host: BaseHost<VE, M>) {
         Timber.d("Die $host")
+
+        CustomCache.remove(host.viewIdKey)
+
         PresenterCache.remove(host.viewIdKey).also {
             Timber.d("Dispose ${it.disposable.size()} elements")
             it.dispose()
@@ -380,6 +383,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
         val viewKey = savedInstanceState?.getString(ViewDelegate.VIEW_ID_KEY)
 
         if (viewKey != null) { // Restore previous state
+
+            host.viewIdKey = viewKey
             val presenter = if (PresenterCache.hasPresenter(viewKey)) { // Configuration changed
                 PresenterCache.getPresenter(viewKey)
             } else {    // Process recreation
@@ -388,16 +393,15 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                 }
             }
 
-            host.viewIdKey = viewKey
             host.presenter = presenter
             return viewKey
         } else { // Create new, first launch
             val viewIdKey = UUID.randomUUID().toString()
+            host.viewIdKey = viewIdKey
 
             createPresenter(host, viewIdKey, savedInstanceState, hostEvents, args).also {
                 PresenterCache.putPresenter(viewIdKey, it)
                 host.presenter = it
-                host.viewIdKey = viewIdKey
             }
             return viewIdKey
         }

@@ -19,6 +19,8 @@ class PhotosAdapter(
     private val onClick: (PhotoModel) -> Unit
 ) : BaseRecyclerAdapter<PhotoVH, PhotoModel>() {
 
+    // private val openSans = ResourcesCompat.getFont(context, R.font.font_opensans_normal)
+
     private val inflater = LayoutInflater.from(context)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoVH {
@@ -33,10 +35,17 @@ class PhotosAdapter(
         val item = data[position]
 
         glide
-            .load(item.previewSquare)
+            .load(item.square)
+            .thumbnail(glide.load(item.previewSquare))
             .placeholder(R.drawable.ic_image_preview_24)
             .error(R.drawable.ic_image_preview_24)
             .into(holder.image)
+
+        /*if (position % 2 == 0) {
+            holder.title.typeface = openSans
+        } else {
+            holder.title.typeface = Typeface.DEFAULT
+        }*/
 
         holder.title.text = item.title
     }

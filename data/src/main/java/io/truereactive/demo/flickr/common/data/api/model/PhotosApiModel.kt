@@ -28,7 +28,8 @@ internal data class FlickrPhoto(
     @Json(name = "ispublic") val ispublic: Int, // TODO: make boolean
     @Json(name = "isfriend") val isfriend: Int, // TODO: make boolean
     @Json(name = "isfamily") val isfamily: Int, // TODO: make boolean
-    @Json(name = "url_sq") val previewSquare: String // TODO: make boolean
+    @Json(name = "url_sq") val previewSquare: String,
+    @Json(name = "url_q") val square: String
 )
 
 @JsonClass(generateAdapter = true)

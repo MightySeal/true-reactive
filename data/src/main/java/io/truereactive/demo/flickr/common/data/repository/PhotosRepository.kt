@@ -16,7 +16,7 @@ class PhotosRepository @Inject internal constructor(
     private val networkApi: FlickrApi
 ) {
 
-    fun getRecent(): Single<List<PhotoModel>> = networkApi.getRecent()
+    fun getRecent(perPage: Int = 100): Single<List<PhotoModel>> = networkApi.getRecent(perPage)
         .map { it.photos.photoList.map(FlickrPhoto::toDomain) }
         .subscribeOn(Schedulers.io())
 

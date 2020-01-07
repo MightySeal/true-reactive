@@ -34,6 +34,16 @@ internal fun BasePresenter.dispose() {
     onClear()
 }
 
+// TODO: Expose BaseHost?
+fun <VE : ViewEvents, M> BaseFragment<VE, M>.hasCache(): Boolean =
+    CustomCache.hasKey(this.viewIdKey)
+
+fun <VE : ViewEvents, M> BaseFragment<VE, M>.putCache(value: Any) =
+    CustomCache.put(this.viewIdKey, value)
+
+fun <VE : ViewEvents, M> BaseFragment<VE, M>.get() = CustomCache.get(this.viewIdKey)
+fun <VE : ViewEvents, M> BaseFragment<VE, M>.remove() = CustomCache.remove(this.viewIdKey)
+
 abstract class BaseFragment<VE : ViewEvents, M> : Fragment(), BaseHost<VE, M>,
     ViewDelegate<VE> by ViewDelegateImpl<VE>()
 

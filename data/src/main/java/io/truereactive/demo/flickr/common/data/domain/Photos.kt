@@ -10,7 +10,8 @@ data class PhotoModel(
     val ispublic: Int, // TODO: make boolean
     val isfriend: Int, // TODO: make boolean
     val isfamily: Int, // TODO: make boolean
-    val previewSquare: String // TODO: make boolean
+    val previewSquare: String,
+    val square: String
 )
 
 data class PhotoSize(

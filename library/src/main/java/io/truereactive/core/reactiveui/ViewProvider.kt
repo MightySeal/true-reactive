@@ -111,6 +111,23 @@ fun <VE : ViewEvents, M> Observable<M>.renderWhileAlive(channel: ViewChannel<VE,
         }
 }
 
+// TODO: Consider one-shot rendering
+/**
+ * Render this data model when the view is ready.
+ *
+ * @param channel ViewChannel for this view
+ * @return Disposable for this stream
+ */
+fun <VE : ViewEvents, M> M.renderWhileAlive(channel: ViewChannel<VE, M>): Disposable {
+    return channel.renderer
+        .takeUntil(channel.state.filter { it == ViewState.Dead })
+        .filter { it.value != null }
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe { renderer ->
+            renderer.value?.render(this)
+        }
+}
+
 
 // TODO: REVIEW
 /**

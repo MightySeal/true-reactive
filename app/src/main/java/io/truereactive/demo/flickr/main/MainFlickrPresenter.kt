@@ -11,7 +11,7 @@ class MainFlickrPresenter(
 
     init {
         viewChannel
-            .mapUntilDead { openPopular }
+            .mapUntilDead { openFeed }
             .firstElement()
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe { openPopular -> openPopular() }

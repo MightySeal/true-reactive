@@ -10,6 +10,7 @@ import io.truereactive.demo.flickr.R
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.main.details.ImageDetailsFragment
 import io.truereactive.demo.flickr.main.home.SearchFragment
+import io.truereactive.demo.flickr.main.home.tabs.FeedFragment
 
 class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
 
@@ -23,7 +24,8 @@ class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
         MainFlickrPresenter(viewChannel)
 
     override fun createViewHolder(view: View): MainFlickrEvents {
-        return MainFlickrEvents(::openPopular)
+        // return MainFlickrEvents(::openPopular)
+        return MainFlickrEvents(::openFeed)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,8 +48,16 @@ class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
             .replace(R.id.container, SearchFragment.newInstance(), null)
             .commit()
     }
+
+    private fun openFeed() {
+        supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.container, FeedFragment.newInstance(), null)
+            .commit()
+    }
 }
 
 class MainFlickrEvents(
-    val openPopular: () -> Unit
+    // val openPopular: () -> Unit
+    val openFeed: () -> Unit
 ): ViewEvents

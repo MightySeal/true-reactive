@@ -14,7 +14,8 @@ internal fun FlickrPhoto.toDomain(): PhotoModel = PhotoModel(
     ispublic = ispublic,
     isfriend = isfriend,
     isfamily = isfamily,
-    previewSquare = previewSquare
+    previewSquare = previewSquare,
+    square = square
 )
 
 internal fun FullFlickrPhoto.toDomain(): PhotoModel = PhotoModel(
@@ -27,7 +28,8 @@ internal fun FullFlickrPhoto.toDomain(): PhotoModel = PhotoModel(
     ispublic = 1,
     isfriend = 1,
     isfamily = 1,
-    previewSquare = urls.urlList.firstOrNull()?.content ?: ""
+    previewSquare = urls.urlList.firstOrNull()?.content ?: "",
+    square = urls.urlList.firstOrNull()?.content ?: ""
 )
 
 internal fun ImageSize.toDomain(): PhotoSize = PhotoSize(

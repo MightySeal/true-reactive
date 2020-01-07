@@ -4,32 +4,32 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.Glide
 import com.jakewharton.rxbinding3.appcompat.SearchViewQueryTextEvent
-import com.jakewharton.rxbinding3.appcompat.queryTextChangeEvents
 import io.reactivex.Observable
 import io.truereactive.core.abstraction.BaseFragment
 import io.truereactive.core.abstraction.BasePresenter
 import io.truereactive.core.abstraction.ViewChannel
 import io.truereactive.core.reactiveui.ViewEvents
-import io.truereactive.demo.flickr.FlickrApplication
 import io.truereactive.demo.flickr.R
 import io.truereactive.demo.flickr.common.data.device.NetworkStateRepository
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
 import io.truereactive.demo.flickr.main.MainFlickrActivity
+import io.truereactive.demo.flickr.main.home.tabs.FeedFragment
 import kotlinx.android.synthetic.main.fragment_flickr_search.*
+import timber.log.Timber
 import javax.inject.Inject
 
 class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
 
     @Inject
     lateinit var photosRepository: PhotosRepository
-
     @Inject
     lateinit var networkStateRepository: NetworkStateRepository
+    @Inject
+    lateinit var searchEvents: Observable<SearchViewQueryTextEvent>
 
     private val photosAdapter by lazy(LazyThreadSafetyMode.NONE) {
         val requestManager = Glide.with(this)
@@ -39,6 +39,7 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
     }
 
     override fun render(model: SearchState) {
+        Timber.i("Set data ${model.photos.size}")
         photosAdapter.replace(model.photos)
     }
 
@@ -47,20 +48,24 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
         args: Bundle?,
         savedState: Bundle?
     ): BasePresenter {
-        (requireActivity().application as FlickrApplication).appComponent.searchComponent().create()
+
+        val component = (requireParentFragment() as FeedFragment).getComponent()
+        component
+            .searchComponent()
+            .create()
             .inject(this)
+
         return SearchPresenter(
             viewChannel,
+            searchEvents,
             photosRepository,
             networkStateRepository,
-            savedState?.getString(SearchPresenter.INITIAL_STATE_KEY)
+            savedState?.getString(SearchPresenter.INITIAL_STATE_KEY) ?: args?.getString(SEARCH_KEY)
         )
     }
 
     override fun createViewHolder(view: View): SearchEvents {
-        val searchItem = bar.menu.findItem(R.id.action_search)
-        val searchView = searchItem.actionView as SearchView
-        return SearchEvents(view, searchView)
+        return SearchEvents(view)
     }
 
     override fun onCreateView(
@@ -74,19 +79,22 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
 
         photosList.layoutManager = GridLayoutManager(requireContext(), 2)
         photosList.adapter = photosAdapter
-
-        bar.replaceMenu(R.menu.home_menu)
     }
 
     companion object {
-        fun newInstance(): SearchFragment = SearchFragment()
+        private const val SEARCH_KEY = "search_key"
+
+        fun newInstance(search: String? = null): SearchFragment = SearchFragment().apply {
+            if (search != null) {
+                arguments = Bundle().also {
+                    it.putString(SEARCH_KEY, search)
+                }
+            }
+        }
     }
 }
 
-class SearchEvents(view: View, searchView: SearchView) : ViewEvents {
-    val searchInput: Observable<SearchViewQueryTextEvent> = searchView.queryTextChangeEvents()
-        .skipInitialValue()
-        .share()
+class SearchEvents(view: View) : ViewEvents {
 }
 
 data class SearchState(
