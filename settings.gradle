@@ -1,2 +1,3 @@
-/**/rootProject.name='True reactive'
+/**/
+rootProject.name = 'True reactive'
 include ':app', ':data', ':library'

@@ -1,4 +1,4 @@
-package io.truereactive.demo.flickr.main.home
+package io.truereactive.demo.flickr.main.home.tabs
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -17,9 +17,8 @@ import io.truereactive.demo.flickr.common.data.device.NetworkStateRepository
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
 import io.truereactive.demo.flickr.main.MainFlickrActivity
-import io.truereactive.demo.flickr.main.home.tabs.FeedFragment
+import io.truereactive.demo.flickr.main.home.FeedFragment
 import kotlinx.android.synthetic.main.fragment_flickr_search.*
-import timber.log.Timber
 import javax.inject.Inject
 
 class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
@@ -33,13 +32,15 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
 
     private val photosAdapter by lazy(LazyThreadSafetyMode.NONE) {
         val requestManager = Glide.with(this)
-        PhotosAdapter(requireActivity(), requestManager) {
+        PhotosAdapter(
+            requireActivity(),
+            requestManager
+        ) {
             (requireActivity() as MainFlickrActivity).openDetails(it)
         }
     }
 
     override fun render(model: SearchState) {
-        Timber.i("Set data ${model.photos.size}")
         photosAdapter.replace(model.photos)
     }
 
@@ -60,7 +61,8 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
             searchEvents,
             photosRepository,
             networkStateRepository,
-            savedState?.getString(SearchPresenter.INITIAL_STATE_KEY) ?: args?.getString(SEARCH_KEY)
+            savedState?.getString(SearchPresenter.INITIAL_STATE_KEY)
+                ?: args?.getString(SEARCH_KEY)
         )
     }
 

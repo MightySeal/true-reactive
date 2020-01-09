@@ -70,11 +70,11 @@ class ImageDetailsFragment : BaseFragment<ImageDetailsEvents, ImageDetails>() {
 
         fun newInstance(photoModel: PhotoModel): ImageDetailsFragment =
             ImageDetailsFragment().apply {
-            arguments = Bundle().also {
-                it.putString(IMAGE_ID_KEY, photoModel.id)
-                it.putString(IMAGE_URL_KEY, photoModel.previewSquare)
+                arguments = Bundle().also {
+                    it.putString(IMAGE_ID_KEY, photoModel.id)
+                    it.putString(IMAGE_URL_KEY, photoModel.previewSquare)
+                }
             }
-        }
     }
 }
 

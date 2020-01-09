@@ -2,7 +2,7 @@ package io.truereactive.demo.flickr.main.home.di
 
 import dagger.Module
 import dagger.Subcomponent
-import io.truereactive.demo.flickr.main.home.SearchFragment
+import io.truereactive.demo.flickr.main.home.tabs.SearchFragment
 import javax.inject.Scope
 
 @SearchComponent.SearchScope

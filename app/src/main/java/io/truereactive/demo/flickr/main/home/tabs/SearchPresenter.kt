@@ -1,4 +1,4 @@
-package io.truereactive.demo.flickr.main.home
+package io.truereactive.demo.flickr.main.home.tabs
 
 import com.jakewharton.rxbinding3.appcompat.SearchViewQueryTextEvent
 import io.reactivex.BackpressureStrategy

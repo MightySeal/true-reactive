@@ -16,6 +16,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import shark.ObjectInspector
 import timber.log.Timber
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.reflect.KClass
 
 interface ReactiveApplication {
 }
@@ -54,10 +56,10 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                         emitter.onNext(
                             ActivityViewState(
                                 host = baseActivity,
-                                // view = activity.window.decorView.rootView,
                                 view = null,
                                 state = ViewState.Created,
-                                key = baseActivity.viewIdKey
+                                key = baseActivity.viewIdKey,
+                                restoredState = savedInstanceState
                             )
                         )
                     }
@@ -151,7 +153,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                             ActivityViewState(
                                 host = baseActivity,
                                 view = null,
-                                savedInstanceState = outState,
+                                outState = outState,
                                 state = ViewState.SavingState,
                                 key = baseActivity.viewIdKey
                             )
@@ -177,6 +179,13 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             .filter { it.state == ViewState.Created }
             .switchMap { activityState ->
 
+                // This hack is need to properly handle fragment destruction in some cases (i.e. viewpager).
+                //  In this case fragment is destroyed *after* the parent activity is destroyed,
+                //  so it's not possible to simply end this stream, we need to handle all the fragments destruction an complete only after that.
+                // TODO: extend this behavior for any fragment, because it's good to have an option to add 3rd party fragments which are not BaseFragment
+                val refCount =
+                    mutableMapOf<KClass<out BaseFragment<ViewEvents, Any>>, AtomicInteger>()
+
                 Observable.create<FragmentViewState<ViewEvents, Any>> { emitter ->
                     val callbacks = object : FragmentManager.FragmentLifecycleCallbacks() {
                         override fun onFragmentPreCreated(
@@ -186,8 +195,10 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                         ) {
 
                             // TODO: Check if this method is called when rotated
-                            Timber.d("${f::class.simpleName}:${f.hashCode()} onFragmentPreCreated")
                             f.executeIfBase { fragment ->
+                                refCount.getOrPut(fragment::class, { AtomicInteger() })
+                                    .incrementAndGet()
+
                                 bindPresenter(
                                     fragment,
                                     savedInstanceState,
@@ -209,7 +220,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                         host = it,
                                         view = v,
                                         state = ViewState.Created,
-                                        key = it.viewIdKey
+                                        key = it.viewIdKey,
+                                        restoredState = savedInstanceState
                                     )
                                 )
                             }
@@ -227,7 +239,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                     FragmentViewState(
                                         host = fr,
                                         view = null,
-                                        savedInstanceState = outState,
+                                        outState = outState,
                                         state = ViewState.SavingState,
                                         key = fr.viewIdKey
                                     )
@@ -275,6 +287,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                         }
 
                         override fun onFragmentStopped(fm: FragmentManager, f: Fragment) {
+
+                            Timber.d("Fragment stopped: ${f::class.simpleName}")
                             f.executeIfBase { fr ->
                                 emitter.onNext(
                                     FragmentViewState(
@@ -301,6 +315,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                     )
                                 )
 
+                                val count = refCount[fr::class]?.decrementAndGet()
                                 if ((fr.requireActivity().isFinishing || fr.isRemoving) && !fr.requireActivity().isChangingConfigurations) {
 
                                     Timber.d("Fragment died: ${fr::class.simpleName}, isFinishing ${fr.requireActivity().isFinishing} changing config ${fr.requireActivity().isChangingConfigurations} isRemoving: ${fr.isRemoving}")
@@ -314,7 +329,15 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                         )
                                     )
 
+                                    if (count == 0) {
+                                        refCount.remove(fr::class)
+                                    }
+
                                     die(fr)
+
+                                    if (refCount.isEmpty()) {
+                                        emitter.onComplete()
+                                    }
                                 }
                             }
                         }
@@ -342,7 +365,6 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                             ViewState.Dead -> second.copy(view = null)
                         }
                     }
-                    .takeUntil { it.state == ViewState.Dead && it.host.activity?.isFinishing ?: false }
                     .share()
             }
             .share()
@@ -421,14 +443,25 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             .takeUntil { it.state == ViewState.Dead }
             .share()
 
-        val savedState = state
-            .observeOn(Schedulers.computation())
+        val restoredState = state
+            .filter { it.state == ViewState.Created || it.state == ViewState.Destroyed }
+            .map {
+                if (it.restoredState != null) {
+                    Optional(it.restoredState)
+                } else {
+                    Optional(null)
+                }
+            }
+            .distinctUntilChanged()
+            .replay(1)
+
+        val outState = state
             .distinctUntilChanged()
             .map {
-                if (it.savedInstanceState == null) {
+                if (it.outState == null) {
                     Optional(null)
                 } else {
-                    Optional(it.savedInstanceState)
+                    Optional(it.outState)
                 }
             }
             .replay(1)
@@ -441,9 +474,16 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             .replay(1)
 
         val viewEvents = viewState
-            .filter { it.view != null }
-            .distinctUntilChanged(::aliveStateChanged)
-            .map { vs -> vs.host.createViewHolder(vs.view!!) }
+            .distinctUntilChanged { prev, current ->
+                aliveStateChanged(prev, current) && prev.view == current.view
+            }
+            .map { vs ->
+                if (vs.state.isAlive && vs.view != null) {
+                    Optional(vs.host.createViewHolder(vs.view!!))
+                } else {
+                    Optional(null)
+                }
+            }
             .replay(1)
 
         val renderer = viewState
@@ -458,19 +498,22 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             .replay(1)
 
         val viewChannel = ViewChannel(
-            savedState = savedState,
+            restoredState = restoredState,
+            outState = outState,
             state = hostState.observeOn(Schedulers.computation()),
             viewEvents = viewEvents,
             renderer = renderer
         )
 
-        val savedStateDisposable = savedState.connect()
+        val restoredStateDisposable = restoredState.connect()
+        val savedStateDisposable = outState.connect()
         val hostStateDisposable = hostState.connect()
         val viewStateDisposable = viewState.connect()
         val viewEventsDisposable = viewEvents.connect()
         val rendererDisposable = renderer.connect()
 
         return host.createPresenter(viewChannel, args, savedInstanceState).also {
+            it.disposable.add(restoredStateDisposable)
             it.disposable.add(savedStateDisposable)
             it.disposable.add(hostStateDisposable)
             it.disposable.add(viewStateDisposable)

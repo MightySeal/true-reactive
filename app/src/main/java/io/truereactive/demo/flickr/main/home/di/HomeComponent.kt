@@ -5,7 +5,7 @@ import dagger.BindsInstance
 import dagger.Module
 import dagger.Subcomponent
 import io.reactivex.Observable
-import io.truereactive.demo.flickr.main.home.tabs.FeedFragment
+import io.truereactive.demo.flickr.main.home.FeedFragment
 import javax.inject.Scope
 
 @HomeComponent.HomeScope

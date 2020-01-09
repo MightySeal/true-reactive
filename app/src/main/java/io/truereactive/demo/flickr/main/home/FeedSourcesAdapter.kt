@@ -1,8 +1,8 @@
-package io.truereactive.demo.flickr.main.home.tabs
+package io.truereactive.demo.flickr.main.home
 
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import io.truereactive.demo.flickr.main.home.SearchFragment
+import io.truereactive.demo.flickr.main.home.tabs.SearchFragment
 
 class FeedSourcesAdapter(fm: Fragment) : FragmentStateAdapter(fm) {
 
@@ -19,7 +19,9 @@ class FeedSourcesAdapter(fm: Fragment) : FragmentStateAdapter(fm) {
     }
 
     override fun createFragment(position: Int): Fragment {
-        return SearchFragment.newInstance(sources[position])
+        return SearchFragment.newInstance(
+            sources[position]
+        )
     }
 
     fun getTabTitle(index: Int) = sources[index]

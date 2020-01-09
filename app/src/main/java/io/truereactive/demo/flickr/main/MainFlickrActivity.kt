@@ -9,10 +9,10 @@ import io.truereactive.core.reactiveui.ViewEvents
 import io.truereactive.demo.flickr.R
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.main.details.ImageDetailsFragment
-import io.truereactive.demo.flickr.main.home.SearchFragment
-import io.truereactive.demo.flickr.main.home.tabs.FeedFragment
+import io.truereactive.demo.flickr.main.home.FeedFragment
+import io.truereactive.demo.flickr.main.home.tabs.SearchFragment
 
-class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
+class MainFlickrActivity : BaseActivity<MainFlickrEvents, Unit>() {
 
     override fun render(model: Unit) {}
 
@@ -24,7 +24,6 @@ class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
         MainFlickrPresenter(viewChannel)
 
     override fun createViewHolder(view: View): MainFlickrEvents {
-        // return MainFlickrEvents(::openPopular)
         return MainFlickrEvents(::openFeed)
     }
 
@@ -32,6 +31,12 @@ class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_flickr)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        val fm = supportFragmentManager
     }
 
     fun openDetails(photoModel: PhotoModel) {
@@ -60,4 +65,4 @@ class MainFlickrActivity: BaseActivity<MainFlickrEvents, Unit>() {
 class MainFlickrEvents(
     // val openPopular: () -> Unit
     val openFeed: () -> Unit
-): ViewEvents
+) : ViewEvents

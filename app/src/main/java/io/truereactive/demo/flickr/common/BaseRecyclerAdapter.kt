@@ -2,7 +2,7 @@ package io.truereactive.demo.flickr.common
 
 import androidx.recyclerview.widget.RecyclerView
 
-abstract class BaseRecyclerAdapter<VH: RecyclerView.ViewHolder, D>: RecyclerView.Adapter<VH>() {
+abstract class BaseRecyclerAdapter<VH : RecyclerView.ViewHolder, D> : RecyclerView.Adapter<VH>() {
     private val internalData = mutableListOf<D>()
     protected val data: List<D> = internalData
 

@@ -1,4 +1,4 @@
-package io.truereactive.demo.flickr.main.home.tabs
+package io.truereactive.demo.flickr.main.home
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -38,7 +38,6 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
 
         sourcesPager.offscreenPageLimit = 2
         sourcesPager.adapter = adapter
-
         bar.replaceMenu(R.menu.home_menu)
 
         TabLayoutMediator(sourcesTabs, sourcesPager) { tab, position ->
@@ -46,8 +45,16 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
         }.attach()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putParcelable(PAGER_STATE_KEY, adapter.saveState())
+    }
+
     override fun render(model: FeedState) {
         adapter.setSources(model.sources)
+        model.selectedPage?.let {
+            sourcesPager.setCurrentItem(it, false)
+        }
     }
 
     override fun createPresenter(
@@ -63,25 +70,33 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
         component.inject(this)
         putCache(component)
 
-        return FeedPresenter(viewChannel)
+        return FeedPresenter(
+            viewChannel
+        )
     }
 
     override fun createViewHolder(view: View): FeedViewEvents {
         val searchItem = bar.menu.findItem(R.id.action_search)
         val searchView = searchItem.actionView as SearchView
-        return FeedViewEvents(view, searchView)
+        return FeedViewEvents(
+            view,
+            searchView
+        )
     }
 
     fun getComponent(): HomeComponent = get() as HomeComponent
 
     companion object {
-        fun newInstance(): FeedFragment = FeedFragment()
+        private const val PAGER_STATE_KEY = "pager_state_key"
+        fun newInstance(): FeedFragment =
+            FeedFragment()
     }
 }
 
 
 class FeedViewEvents(view: View, searchView: SearchView) : ViewEvents {
-    val pageSelectedEvents: Observable<Int> = view.sourcesPager?.events() ?: Observable.empty()
+    val pageSelectedEvents: Observable<Int> =
+        (view.sourcesPager?.events() ?: Observable.empty()).share()
 
     val searchInput: Observable<SearchViewQueryTextEvent> = searchView.queryTextChangeEvents()
         .skipInitialValue()
@@ -89,7 +104,8 @@ class FeedViewEvents(view: View, searchView: SearchView) : ViewEvents {
 }
 
 data class FeedState(
-    val sources: List<String>
+    val sources: List<String>,
+    val selectedPage: Int? = null
 )
 
 fun ViewPager2.events() = Observable.create<Int> { emitter ->
