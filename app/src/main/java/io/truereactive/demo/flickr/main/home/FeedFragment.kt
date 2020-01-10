@@ -45,11 +45,6 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
         }.attach()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putParcelable(PAGER_STATE_KEY, adapter.saveState())
-    }
-
     override fun render(model: FeedState) {
         adapter.setSources(model.sources)
         model.selectedPage?.let {
@@ -87,7 +82,6 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
     fun getComponent(): HomeComponent = get() as HomeComponent
 
     companion object {
-        private const val PAGER_STATE_KEY = "pager_state_key"
         fun newInstance(): FeedFragment =
             FeedFragment()
     }
