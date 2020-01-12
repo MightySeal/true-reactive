@@ -28,7 +28,7 @@ Useful methods:
 ## Example
 
 ### Define View
-```
+```kt
 class SearchFragment : BaseFragment<SearchViewEvents, SearchState>() {
 
     override fun render(model: SearchState) {
@@ -60,8 +60,7 @@ class SearchViewEvents(view: View) {
 ```
 
 ### Define Presenter
-
-```
+```kt
 class SearchPresenter(
     private val channel: ViewChannel<SearchViewEvents, SearchState>,
     private val searchRepository: SearchRepository 

@@ -7,7 +7,8 @@ import dagger.Component
 import dagger.Module
 import dagger.Provides
 import io.truereactive.demo.flickr.common.data.BuildConfig
-import io.truereactive.demo.flickr.common.data.api.FlickrApi
+import io.truereactive.demo.flickr.common.data.api.flickr.FlickrApi
+import io.truereactive.demo.flickr.common.data.api.unsplash.UnsplashApi
 import io.truereactive.demo.flickr.common.data.device.NetworkStateRepository
 import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
 import okhttp3.Interceptor
@@ -41,12 +42,46 @@ internal abstract class NetworkModule {
     @Module
     companion object {
 
+        /* @Provides
+         @JvmStatic
+         fun provideOkHttpClient(): OkHttpClient {
+             return OkHttpClient.Builder()
+                 .connectTimeout(10, TimeUnit.SECONDS)
+                 .readTimeout(20, TimeUnit.SECONDS)
+                 .addInterceptor(object : Interceptor {
+                     override fun intercept(chain: Interceptor.Chain): Response {
+                         val original = chain.request()
+                         val originalUrl = original.url
+
+                         val newUrl = originalUrl.newBuilder()
+                             .addQueryParameter("api_key", BuildConfig.FLICKR_KEY)
+                             .addQueryParameter("format", "json")
+                             .addQueryParameter("nojsoncallback", "1")
+                             .build()
+
+                         val newRequest = original.newBuilder().url(newUrl).build()
+
+                         return chain.proceed(newRequest)
+                     }
+                 }).addInterceptor(HttpLoggingInterceptor().apply {
+                     level = HttpLoggingInterceptor.Level.BODY
+                     // level = HttpLoggingInterceptor.Level.BASIC
+                 })
+                 .build()
+         }*/
+
         @Provides
         @JvmStatic
-        fun provideOkHttpClient(): OkHttpClient {
-            return OkHttpClient.Builder()
-                .connectTimeout(10, TimeUnit.SECONDS)
-                .readTimeout(20, TimeUnit.SECONDS)
+        fun provideMoshi(): Moshi {
+            return Moshi.Builder()
+                .build()
+        }
+
+        // TODO: lazy okhttp
+        @Provides
+        @JvmStatic
+        fun provideFlickrApi(okHttpBuilder: OkHttpClient.Builder, moshi: Moshi): FlickrApi {
+            val okHttp = okHttpBuilder
                 .addInterceptor(object : Interceptor {
                     override fun intercept(chain: Interceptor.Chain): Response {
                         val original = chain.request()
@@ -62,24 +97,9 @@ internal abstract class NetworkModule {
 
                         return chain.proceed(newRequest)
                     }
-                }).addInterceptor(HttpLoggingInterceptor().apply {
-                    level = HttpLoggingInterceptor.Level.BODY
-                    // level = HttpLoggingInterceptor.Level.BASIC
                 })
                 .build()
-        }
 
-        @Provides
-        @JvmStatic
-        fun provideMoshi(): Moshi {
-            return Moshi.Builder()
-                .build()
-        }
-
-        // TODO: lazy okhttp
-        @Provides
-        @JvmStatic
-        fun provideApi(okHttp: OkHttpClient, moshi: Moshi): FlickrApi {
             return Retrofit.Builder()
                 .baseUrl(FlickrApi.ENDPOINT)
                 .client(okHttp)
@@ -87,6 +107,48 @@ internal abstract class NetworkModule {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build()
                 .create(FlickrApi::class.java)
+        }
+
+        @Provides
+        @JvmStatic
+        fun provideUnsplashApi(okHttpBuilder: OkHttpClient.Builder, moshi: Moshi): UnsplashApi {
+            val okHttp = okHttpBuilder
+                .addInterceptor(object : Interceptor {
+                    private val accessKey = "Client-ID ${BuildConfig.UNSPLASH_KEY}"
+                    override fun intercept(chain: Interceptor.Chain): Response {
+                        val original = chain.request()
+
+                        val newRequest = original.newBuilder()
+                            .addHeader("Content-Type", "application/json")
+                            .addHeader("Accept-Version", "v1")
+                            .addHeader("Authorization", accessKey)
+                            .build()
+
+                        return chain.proceed(newRequest)
+                    }
+                })
+                .build()
+
+            return Retrofit.Builder()
+                .baseUrl(UnsplashApi.ENDPOINT)
+                .client(okHttp)
+                .addConverterFactory(MoshiConverterFactory.create(moshi))
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .build()
+                .create(UnsplashApi::class.java)
+        }
+
+        @Provides
+        @JvmStatic
+        @Singleton
+        fun provideOkHttpClientBuilder(): OkHttpClient.Builder {
+            return OkHttpClient.Builder()
+                .connectTimeout(10, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .addInterceptor(HttpLoggingInterceptor().apply {
+                    // level = HttpLoggingInterceptor.Level.BODY
+                    level = HttpLoggingInterceptor.Level.BASIC
+                })
         }
     }
 }

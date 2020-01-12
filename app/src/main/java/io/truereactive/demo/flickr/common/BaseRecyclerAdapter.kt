@@ -1,16 +1,30 @@
 package io.truereactive.demo.flickr.common
 
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 
 abstract class BaseRecyclerAdapter<VH : RecyclerView.ViewHolder, D> : RecyclerView.Adapter<VH>() {
-    private val internalData = mutableListOf<D>()
-    protected val data: List<D> = internalData
 
-    override fun getItemCount(): Int = internalData.size
+    private var internalData: RecyclerData<D> = RecyclerData(emptyList(), null)
+    protected val data: List<D>
+        get() = internalData.data
 
-    fun replace(newData: List<D>) {
-        internalData.clear()
-        internalData.addAll(newData)
-        notifyDataSetChanged()
+    override fun getItemCount(): Int = internalData.data.size
+
+    fun replace(newData: RecyclerData<D>) {
+        internalData = newData
+        if (newData.diffResult != null) {
+
+            // TODO: figure out `Inconsistency detected. Invalid item position 10(offset:110).state:110`
+            // newData.diffResult.dispatchUpdatesTo(this)
+            notifyDataSetChanged()
+        } else {
+            notifyDataSetChanged()
+        }
     }
 }
+
+class RecyclerData<D>(
+    val data: List<D>,
+    val diffResult: DiffUtil.DiffResult?
+)

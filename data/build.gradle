@@ -27,6 +27,9 @@ android {
 
         buildConfigField("String", "FLICKR_KEY", apikeyProperties['flickrKey'])
         buildConfigField("String", "FLICKR_SECRET", apikeyProperties['flickrSecret'])
+
+        buildConfigField("String", "UNSPLASH_KEY", apikeyProperties['unsplashKey'])
+        buildConfigField("String", "UNSPLASH_SECRET", apikeyProperties['unsplashSecret'])
     }
 
     dexOptions {

@@ -1,4 +1,4 @@
-package io.truereactive.demo.flickr.common.data.api.model
+package io.truereactive.demo.flickr.common.data.api.flickr.model
 
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass

@@ -7,8 +7,8 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center">
+        android:gravity="center"
+        android:orientation="vertical">
 
         <ImageView
             android:id="@+id/image"
@@ -20,25 +20,12 @@
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:lines="1"
             android:ellipsize="end"
-            tools:text="Title" />
-
-        <TextView
-            android:id="@+id/titlePt"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:lines="1"
-            android:ellipsize="end"
-            tools:text="Title" />
-
-        <TextView
-            android:id="@+id/titleOpen"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:lines="1"
-            android:ellipsize="end"
-            tools:text="Title" />
+            android:maxLines="2"
+            android:textSize="16sp"
+            android:textAlignment="center"
+            android:fontFamily="@font/font_notosans_normal"
+            tools:text="Sunset by Mark from Unsplash" />
 
     </LinearLayout>
 

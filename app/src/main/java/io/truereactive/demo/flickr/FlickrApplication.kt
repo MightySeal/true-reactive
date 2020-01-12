@@ -1,6 +1,7 @@
 package io.truereactive.demo.flickr
 
 import android.app.Application
+import android.os.Debug
 import io.truereactive.core.reactiveui.ReactiveApp
 import io.truereactive.demo.flickr.common.data.di.DaggerDataComponent
 import io.truereactive.demo.flickr.di.ApplicationComponent
@@ -17,6 +18,9 @@ open class FlickrApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // Trace.beginSection("TRACE_STARTUP")
+        Debug.startMethodTracing("TRACE_STARTUP")
 
         Timber.plant(Timber.DebugTree())
         super.onCreate()

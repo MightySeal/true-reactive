@@ -1,9 +1,11 @@
 package io.truereactive.demo.flickr.main.home.tabs
 
 import android.os.Bundle
+import android.os.Debug
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import com.bumptech.glide.Glide
 import com.jakewharton.rxbinding3.appcompat.SearchViewQueryTextEvent
@@ -13,6 +15,7 @@ import io.truereactive.core.abstraction.BasePresenter
 import io.truereactive.core.abstraction.ViewChannel
 import io.truereactive.core.reactiveui.ViewEvents
 import io.truereactive.demo.flickr.R
+import io.truereactive.demo.flickr.common.RecyclerData
 import io.truereactive.demo.flickr.common.data.device.NetworkStateRepository
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
@@ -41,7 +44,9 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
     }
 
     override fun render(model: SearchState) {
-        photosAdapter.replace(model.photos)
+        photosAdapter.replace(RecyclerData(model.photos, model.photosDiff))
+        // Trace.endSection()
+        Debug.stopMethodTracing()
     }
 
     override fun createPresenter(
@@ -100,5 +105,10 @@ class SearchEvents(view: View) : ViewEvents {
 }
 
 data class SearchState(
-    val photos: List<PhotoModel>
-)
+    val photos: List<PhotoModel>,
+    val photosDiff: DiffUtil.DiffResult
+) {
+    override fun toString(): String {
+        return "${photos.size} $photosDiff"
+    }
+}

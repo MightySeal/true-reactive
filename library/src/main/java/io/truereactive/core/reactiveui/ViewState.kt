@@ -57,14 +57,14 @@ val ViewState.isAlive: Boolean
         ViewState.Dead -> false
     }
 
-internal fun aliveStateChanged(first: ViewState, second: ViewState): Boolean =
+internal fun sameAliveState(first: ViewState, second: ViewState): Boolean =
     !(first.isAlive xor second.isAlive)
 
-internal fun <VE : ViewEvents, M, AVS : AndroidViewState<VE, M>> aliveStateChanged(
+internal fun <VE : ViewEvents, M, AVS : AndroidViewState<VE, M>> sameAliveState(
     first: AVS,
     second: AVS
 ): Boolean =
-    aliveStateChanged(first.state, second.state)
+    sameAliveState(first.state, second.state)
 
 internal fun <VE : ViewEvents, M> FragmentViewState<VE, M>.print(): String =
     "${this::class.simpleName}[host=${host::class.simpleName}, state=${state.name}, view=${view.hashCode()}]"

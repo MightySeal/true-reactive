@@ -215,6 +215,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                             savedInstanceState: Bundle?
                         ) {
                             f.executeIfBase {
+                                Timber.d("Fragment created: ${it::class.simpleName} — ${it.viewIdKey}")
                                 emitter.onNext(
                                     FragmentViewState(
                                         host = it,
@@ -303,9 +304,9 @@ class ReactiveApp(app: Application) : ReactiveApplication {
 
                         override fun onFragmentDestroyed(fm: FragmentManager, f: Fragment) {
 
-                            Timber.d("Fragment destroyed: ${f::class.simpleName}")
                             f.executeIfBase { fr ->
 
+                                Timber.d("Fragment destroyed: ${f::class.simpleName} — ${fr.viewIdKey}")
                                 emitter.onNext(
                                     FragmentViewState(
                                         host = fr,
@@ -316,9 +317,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                                 )
 
                                 val count = refCount[fr::class]?.decrementAndGet()
-                                if ((fr.requireActivity().isFinishing || fr.isRemoving) && !fr.requireActivity().isChangingConfigurations) {
 
-                                    Timber.d("Fragment died: ${fr::class.simpleName}, isFinishing ${fr.requireActivity().isFinishing} changing config ${fr.requireActivity().isChangingConfigurations} isRemoving: ${fr.isRemoving}")
+                                if ((fr.requireActivity().isFinishing || fr.isRemoving) && !fr.requireActivity().isChangingConfigurations) {
 
                                     emitter.onNext(
                                         FragmentViewState(
@@ -475,7 +475,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
 
         val viewEvents = viewState
             .distinctUntilChanged { prev, current ->
-                aliveStateChanged(prev, current) && prev.view == current.view
+                sameAliveState(prev, current) && prev.view == current.view
             }
             .map { vs ->
                 if (vs.state.isAlive && vs.view != null) {
@@ -487,7 +487,7 @@ class ReactiveApp(app: Application) : ReactiveApplication {
             .replay(1)
 
         val renderer = viewState
-            .distinctUntilChanged(::aliveStateChanged)
+            .distinctUntilChanged(::sameAliveState)
             .map { vs ->
                 if (vs.state.isAlive) {
                     Optional(vs.host)

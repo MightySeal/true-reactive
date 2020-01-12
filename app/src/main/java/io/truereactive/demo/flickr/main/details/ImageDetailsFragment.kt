@@ -13,6 +13,7 @@ import io.truereactive.core.reactiveui.ViewEvents
 import io.truereactive.demo.flickr.FlickrApplication
 import io.truereactive.demo.flickr.R
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
+import io.truereactive.demo.flickr.common.data.domain.Source
 import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
 import kotlinx.android.synthetic.main.fragment_flickr_image_details.*
 import javax.inject.Inject
@@ -55,7 +56,8 @@ class ImageDetailsFragment : BaseFragment<ImageDetailsEvents, ImageDetails>() {
             viewChannel,
             photosRepository,
             args!!.getString(IMAGE_ID_KEY)!!,
-            args!!.getString(IMAGE_URL_KEY)!!
+            args.getString(IMAGE_URL_KEY)!!,
+            Source.valueOf(args.getString(IMAGE_SOURCE_KEY)!!)
         )
     }
 
@@ -67,12 +69,14 @@ class ImageDetailsFragment : BaseFragment<ImageDetailsEvents, ImageDetails>() {
 
         private const val IMAGE_ID_KEY = "image_id"
         private const val IMAGE_URL_KEY = "image_url"
+        private const val IMAGE_SOURCE_KEY = "image_source"
 
         fun newInstance(photoModel: PhotoModel): ImageDetailsFragment =
             ImageDetailsFragment().apply {
                 arguments = Bundle().also {
                     it.putString(IMAGE_ID_KEY, photoModel.id)
                     it.putString(IMAGE_URL_KEY, photoModel.previewSquare)
+                    it.putString(IMAGE_SOURCE_KEY, photoModel.source.name)
                 }
             }
     }

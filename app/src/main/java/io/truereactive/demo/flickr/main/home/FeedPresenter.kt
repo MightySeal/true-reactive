@@ -26,7 +26,8 @@ class FeedPresenter(
                 val index = it.getInt(SAVED_INDEX_KEY)
                 FeedState(
                     sources = sources,
-                    selectedPage = index
+                    selectedPage = index,
+                    restored = true
                 )
             }
             .startWith(FeedState(sources))

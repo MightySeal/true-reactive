@@ -1,9 +1,9 @@
-package io.truereactive.demo.flickr.common.data.api
+package io.truereactive.demo.flickr.common.data.api.flickr
 
 import io.reactivex.Single
-import io.truereactive.demo.flickr.common.data.api.model.FlickrImageSizesResponse
-import io.truereactive.demo.flickr.common.data.api.model.FlickrPhotoInfoResponse
-import io.truereactive.demo.flickr.common.data.api.model.FlickrPhotosResponse
+import io.truereactive.demo.flickr.common.data.api.flickr.model.FlickrImageSizesResponse
+import io.truereactive.demo.flickr.common.data.api.flickr.model.FlickrPhotoInfoResponse
+import io.truereactive.demo.flickr.common.data.api.flickr.model.FlickrPhotosResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 

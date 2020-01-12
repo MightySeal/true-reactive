@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestManager
 import io.truereactive.demo.flickr.R
@@ -19,9 +18,6 @@ class PhotosAdapter(
     private val glide: RequestManager,
     private val onClick: (PhotoModel) -> Unit
 ) : BaseRecyclerAdapter<PhotoVH, PhotoModel>() {
-
-    private val openSans = ResourcesCompat.getFont(context, R.font.font_opensans_normal)
-    private val ptSans = ResourcesCompat.getFont(context, R.font.font_ptsans_normal)
 
     private val inflater = LayoutInflater.from(context)
 
@@ -49,18 +45,13 @@ class PhotosAdapter(
             .error(R.drawable.ic_image_preview_24)
             .into(holder.image)
 
-        holder.title.text = item.title
-        holder.titlePt.text = item.title
-        holder.titleOpen.text = item.title
-
-        holder.titlePt.typeface = ptSans
-        holder.titleOpen.typeface = openSans
+        val imageName = item.title ?: "by ${item.owner}"
+        val title = "$imageName from ${item.source}".trim()
+        holder.title.text = title
     }
 }
 
 class PhotoVH(val view: View) : RecyclerView.ViewHolder(view) {
     val image: ImageView = view.image
     val title: TextView = view.title
-    val titlePt: TextView = view.titlePt
-    val titleOpen: TextView = view.titleOpen
 }

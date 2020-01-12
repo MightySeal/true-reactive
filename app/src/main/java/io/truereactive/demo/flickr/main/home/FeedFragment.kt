@@ -18,12 +18,11 @@ import io.truereactive.demo.flickr.R
 import io.truereactive.demo.flickr.main.home.di.HomeComponent
 import kotlinx.android.synthetic.main.fragment_feed.*
 import kotlinx.android.synthetic.main.fragment_feed.view.*
+import java.util.concurrent.TimeUnit
 
 class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
 
-    private val adapter by lazy(LazyThreadSafetyMode.NONE) {
-        FeedSourcesAdapter(this)
-    }
+    private lateinit var adapter: FeedSourcesAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,17 +35,20 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        sourcesPager.offscreenPageLimit = 2
-        sourcesPager.adapter = adapter
+        sourcesPager.offscreenPageLimit = 1
         bar.replaceMenu(R.menu.home_menu)
-
-        TabLayoutMediator(sourcesTabs, sourcesPager) { tab, position ->
-            tab.text = adapter.getTabTitle(position)
-        }.attach()
     }
 
     override fun render(model: FeedState) {
-        adapter.setSources(model.sources)
+        if (model.restored) {
+            adapter = createAdapter(model.sources)
+        } else {
+            if (!::adapter.isInitialized) {
+                adapter = createAdapter(null)
+            }
+
+            adapter.setSources(model.sources)
+        }
         model.selectedPage?.let {
             sourcesPager.setCurrentItem(it, false)
         }
@@ -57,7 +59,7 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
         args: Bundle?,
         savedState: Bundle?
     ): BasePresenter {
-        val searchEvents = viewChannel.viewEventsUntilDead { searchInput }
+        val searchEvents = viewChannel.viewEventsUntilDead { searchInput }.share()
 
         val component =
             (requireActivity().application as FlickrApplication).appComponent.homeComponent()
@@ -81,6 +83,20 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
 
     fun getComponent(): HomeComponent = get() as HomeComponent
 
+    private fun createAdapter(sources: List<String>?): FeedSourcesAdapter {
+        val adapter = sources?.let {
+            FeedSourcesAdapter(this, it)
+        } ?: FeedSourcesAdapter(this)
+
+        sourcesPager.adapter = adapter
+
+        TabLayoutMediator(sourcesTabs, sourcesPager) { tab, position ->
+            tab.text = adapter.getTabTitle(position)
+        }.attach()
+
+        return adapter
+    }
+
     companion object {
         fun newInstance(): FeedFragment =
             FeedFragment()
@@ -94,12 +110,14 @@ class FeedViewEvents(view: View, searchView: SearchView) : ViewEvents {
 
     val searchInput: Observable<SearchViewQueryTextEvent> = searchView.queryTextChangeEvents()
         .skipInitialValue()
+        .throttleLast(300, TimeUnit.MILLISECONDS)
         .share()
 }
 
 data class FeedState(
     val sources: List<String>,
-    val selectedPage: Int? = null
+    val selectedPage: Int? = null,
+    val restored: Boolean = false
 )
 
 fun ViewPager2.events() = Observable.create<Int> { emitter ->
