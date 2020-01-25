@@ -2,6 +2,13 @@
 
 A way to write fully reactive android apps.
 
+## Motivation
+
+Android is an event driven system where application receives callbacks from activites/fragments, input sources, db/network request results, device state changes like GPS or connectivity. 
+The reactive approach to data processing using RxJava made it much simpler to compose and transform these data streams. However, activity/fragment lifecycle is still an entry point and android app utilize UI-driven architecture approach. Handling lifecycle and configuration changes remains complex which leads to memory leaks, task interruptions, etc.
+True reactive transforms Android UI lifecycle to a stream which can be composed with any other stream and provide a completely reactive way to organize app presentation layer.
+  
+
 ## Key concepts
 
 * Presenter survives configuration changes

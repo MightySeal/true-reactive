@@ -1,6 +1,5 @@
 ext {
 
-    androidBuildToolsVersion = '28.0.3'
     androidMinSdkVersion = 21
     androidTargetSdkVersion = 28
     androidCompileSdkVersion = 28
@@ -38,11 +37,12 @@ ext {
 
     leakCanary = '2.1'
 
-
     modules = [
-            domain : ':domain',
-            data   : ':data',
-            library: ':library'
+            domain     : ':sample:domain',
+            data       : ':sample:data',
+            libraryCore: ':library:library-core',
+            libraryRx  : ':library:library-rx',
+            libraryFlow: ':library:library-flow'
     ]
 
     javaDependencies = [
@@ -128,7 +128,7 @@ ext {
             [configuration: "implementation", dependency: javaDependencies.coroutinesRx],
             [configuration: "implementation", dependency: androidDependencies.coroutinesAndroid],
 
-            [configuration: "implementation", dependency: project(modules.library)],
+            [configuration: "implementation", dependency: project(modules.libraryRx)],
             [configuration: "implementation", dependency: project(modules.data)],
             // [configuration: "implementation", dependency: project(modules.domain)],
             // [configuration: "implementation", dependency: project(modules.data)],
@@ -191,16 +191,51 @@ ext {
             [configuration: "testImplementation", dependency: testDependencies.mockito],
             [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
     ]
-    libraryDependencies = [
+
+    libraryCoreDependencies = [
             [configuration: "api", dependency: javaDependencies.kotlin],
             [configuration: "api", dependency: javaDependencies.kotlinReflect],
-            [configuration: "api", dependency: javaDependencies.coroutinesCore],
-            [configuration: "api", dependency: javaDependencies.coroutinesRx],
+            [configuration: "api", dependency: androidDependencies.timber],
+            [configuration: "api", dependency: androidDependencies.appcompat],
+    ]
+
+    libraryRxDependencies = [
+            [configuration: "api", dependency: project(modules.libraryCore)],
+            [configuration: "api", dependency: javaDependencies.kotlin],
+            [configuration: "api", dependency: javaDependencies.kotlinReflect],
             [configuration: "api", dependency: androidDependencies.coroutinesAndroid],
 
             [configuration: "api", dependency: androidDependencies.timber],
             [configuration: "api", dependency: javaDependencies.rxJava],
             [configuration: "api", dependency: androidDependencies.rxAndroid],
+
+            [configuration: "api", dependency: androidDependencies.appcompat],
+            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary],
+
+            [configuration: "testImplementation", dependency: testDependencies.robolectric],
+            [configuration: "testImplementation", dependency: testDependencies.junit],
+            [configuration: "testImplementation", dependency: testDependencies.mockito],
+            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
+
+            [configuration: "androidTestImplementation", dependency: testDependencies.junit],
+            [configuration: "androidTestImplementation", dependency: testDependencies.junitKtx],
+
+            [configuration: "androidTestImplementation", dependency: androidTestDependencies.testCore],
+            [configuration: "androidTestImplementation", dependency: androidTestDependencies.testRunner],
+
+            [configuration: "androidTestImplementation", dependency: androidDependencies.rxBinding],
+            [configuration: "androidTestImplementation", dependency: androidDependencies.rxBindingMaterial],
+            [configuration: "androidTestImplementation", dependency: androidDependencies.rxBindingAppcompat],
+    ]
+
+    libraryFlowDependencies = [
+            [configuration: "api", dependency: project(modules.libraryCore)],
+            [configuration: "api", dependency: javaDependencies.kotlin],
+            [configuration: "api", dependency: javaDependencies.kotlinReflect],
+            [configuration: "api", dependency: javaDependencies.coroutinesCore],
+            [configuration: "api", dependency: androidDependencies.coroutinesAndroid],
+
+            [configuration: "api", dependency: androidDependencies.timber],
 
             [configuration: "api", dependency: androidDependencies.appcompat],
             [configuration: "debugImplementation", dependency: androidDependencies.leakCanary],
