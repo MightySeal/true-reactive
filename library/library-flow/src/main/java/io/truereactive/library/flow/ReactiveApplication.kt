@@ -1,19 +1,9 @@
 package io.truereactive.library.flow
 
-import android.app.Activity
 import android.app.Application
-import android.os.Bundle
-import android.view.View
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
-import io.truereactive.library.core.*
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
-import timber.log.Timber
-import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.reflect.KClass
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.MainScope
 
 interface ReactiveApplication {
 }
@@ -31,7 +21,7 @@ class ReactiveApp(app: Application) : ReactiveApplication, CoroutineScope by Mai
             val label = instance[Optional::class, "logKey"]!!
             reporter.labels.add("${label.name}: ${label.value.readAsJavaString()}")
         }
-    }*/
+    }
 
     // private val compositeDisposable = CompositeDisposable()
     private val appJob = Job()
@@ -513,7 +503,5 @@ class ReactiveApp(app: Application) : ReactiveApplication, CoroutineScope by Mai
             it.disposable.add(viewEventsDisposable)
             it.disposable.add(rendererDisposable)
         }
-    }
+    }*/
 }
-
-private class SharedFlow : SafeFlow

@@ -1,3 +1,5 @@
 /**/
 rootProject.name = 'True reactive'
-include ':sample:app', ':sample:data', ':library:library-core', ':library:library-rx', ':library:library-flow'
+include ':sample:core', ':sample:app', ':sample:app-flow',
+        ':sample:data', ':sample:data-flow',
+        ':library:library-core', ':library:library-rx', ':library:library-flow'

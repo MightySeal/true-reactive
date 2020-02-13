@@ -1,0 +1,53 @@
+apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+
+android {
+    compileSdkVersion 29
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [
+                        "room.schemaLocation"  : "$projectDir/schemas".toString(),
+                        "room.incremental"     : "true",
+                        "room.expandProjection": "true"]
+            }
+        }
+    }
+
+    defaultConfig {
+        def apikeyPropertiesFile = project.file("key-local.properties")
+        def apikeyProperties = new Properties()
+        apikeyProperties.load(new FileInputStream(apikeyPropertiesFile))
+
+        buildConfigField("String", "FLICKR_KEY", apikeyProperties['flickrKey'])
+        buildConfigField("String", "FLICKR_SECRET", apikeyProperties['flickrSecret'])
+
+        buildConfigField("String", "UNSPLASH_KEY", apikeyProperties['unsplashKey'])
+        buildConfigField("String", "UNSPLASH_SECRET", apikeyProperties['unsplashSecret'])
+    }
+
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
+dependencies {
+
+    dataFlowDependencies.forEach {
+        add(it.configuration, it.dependency, it.options)
+    }
+}

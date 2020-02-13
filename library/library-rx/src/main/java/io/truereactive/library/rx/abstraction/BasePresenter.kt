@@ -11,7 +11,6 @@ import io.truereactive.library.core.CustomCache
 import io.truereactive.library.core.Renderer
 import io.truereactive.library.core.ViewEvents
 import io.truereactive.library.rx.BuildConfig
-import java.util.*
 
 // TODO: consider providing function like
 //  fun logic(events: Observable<SearchViewEvents>, disposable: CompositeDisposable)
@@ -24,7 +23,7 @@ import java.util.*
 abstract class BasePresenter() {
     val disposable = CompositeDisposable()
 
-    fun onClear() {}
+    open fun onClear() {}
 
     fun Disposable.untilDead() = disposable.add(this)
 }
@@ -82,8 +81,3 @@ internal class ViewDelegateImpl<VE : ViewEvents> : ViewDelegate<VE> {
     override lateinit var viewIdKey: String
     override lateinit var presenter: BasePresenter
 }
-
-data class Optional<T>(
-    val value: T?,
-    val logKey: String = UUID.randomUUID().toString()
-)

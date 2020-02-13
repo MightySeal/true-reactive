@@ -2,6 +2,7 @@ package io.truereactive.library.rx.abstraction
 
 import android.os.Bundle
 import io.reactivex.Observable
+import io.truereactive.library.core.Optional
 import io.truereactive.library.core.Renderer
 import io.truereactive.library.core.ViewEvents
 import io.truereactive.library.core.ViewState

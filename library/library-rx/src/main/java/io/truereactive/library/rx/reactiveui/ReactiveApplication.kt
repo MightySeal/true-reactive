@@ -10,9 +10,9 @@ import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import io.truereactive.library.core.*
+import io.truereactive.library.core.Optional
 import io.truereactive.library.rx.BuildConfig
 import io.truereactive.library.rx.abstraction.*
-import io.truereactive.library.rx.abstraction.Optional
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import shark.ObjectInspector
 import timber.log.Timber

@@ -1,5 +1,7 @@
 package io.truereactive.library.core
 
+import java.util.*
+
 interface ViewEvents
 
 interface Renderer<M> {
@@ -36,4 +38,9 @@ fun sameAliveState(first: ViewState, second: ViewState): Boolean =
 data class AndroidModel<M, R>(
     val data: M,
     val restored: R
+)
+
+data class Optional<T>(
+    val value: T?,
+    val logKey: String = UUID.randomUUID().toString()
 )

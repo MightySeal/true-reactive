@@ -8,8 +8,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.RequestManager
+import io.truereactive.demo.core.BaseRecyclerAdapter
 import io.truereactive.demo.flickr.R
-import io.truereactive.demo.flickr.common.BaseRecyclerAdapter
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import kotlinx.android.synthetic.main.list_item_photo.view.*
 

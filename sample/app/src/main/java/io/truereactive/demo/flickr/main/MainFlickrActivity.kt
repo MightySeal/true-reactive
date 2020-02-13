@@ -3,7 +3,6 @@ package io.truereactive.demo.flickr.main
 import android.os.Bundle
 import android.view.View
 import io.truereactive.demo.flickr.R
-import io.truereactive.demo.flickr.app
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.main.details.ImageDetailsFragment
 import io.truereactive.demo.flickr.main.home.FeedFragment
@@ -32,18 +31,6 @@ class MainFlickrActivity : BaseActivity<MainFlickrEvents, Unit>() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_flickr)
-
-        app().trackTimePassed("SET CONTENT VIEW")
-    }
-
-    override fun onStart() {
-        super.onStart()
-        app().trackTimePassed("ON START")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        app().trackTimePassed("ON RESUME")
     }
 
     fun openDetails(photoModel: PhotoModel) {
@@ -62,8 +49,6 @@ class MainFlickrActivity : BaseActivity<MainFlickrEvents, Unit>() {
     }
 
     private fun openFeed() {
-
-        app().trackTimePassed("OPEN FEED")
         supportFragmentManager
             .beginTransaction()
             .replace(R.id.container, FeedFragment.newInstance(), null)

@@ -8,13 +8,9 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
-import io.truereactive.library.core.Renderer
-import io.truereactive.library.core.ViewEvents
-import io.truereactive.library.core.ViewState
-import io.truereactive.library.core.isAlive
+import io.truereactive.library.core.*
 import io.truereactive.library.rx.abstraction.BaseActivity
 import io.truereactive.library.rx.abstraction.BaseFragment
-import io.truereactive.library.rx.abstraction.Optional
 import io.truereactive.library.rx.abstraction.ViewChannel
 
 // TODO: provide a context for it (multireceivers could help a lot here)

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="io.truereactive.demo.flickr">
+
+    <application
+        android:name=".FlickrApplication"
+        android:allowBackup="true"
+        android:debuggable="false"
+        android:supportsRtl="true"
+        tools:replace="android:name,android:debuggable">
+
+    </application>
+
+</manifest>

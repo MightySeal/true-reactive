@@ -8,13 +8,14 @@ import androidx.fragment.app.Fragment
 import io.truereactive.library.core.CustomCache
 import io.truereactive.library.core.Renderer
 import io.truereactive.library.core.ViewEvents
-import io.truereactive.library.flow.BuildConfig
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
 
-class BasePresenter {
+abstract class BasePresenter : CoroutineScope by MainScope() {
     val parentJob = Job()
 
-    fun onClear() {}
+    open fun onClear() {}
 
     // fun Job.untilDead() = parentJob.add(this)
 }

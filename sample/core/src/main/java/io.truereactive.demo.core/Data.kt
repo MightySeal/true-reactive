@@ -1,4 +1,4 @@
-package io.truereactive.demo.flickr.common
+package io.truereactive.demo.core
 
 class Data<T>(
     val value: T,

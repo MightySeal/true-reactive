@@ -11,9 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.jakewharton.rxbinding3.appcompat.SearchViewQueryTextEvent
 import io.reactivex.Observable
+import io.truereactive.demo.core.RecyclerData
 import io.truereactive.demo.flickr.R
-import io.truereactive.demo.flickr.app
-import io.truereactive.demo.flickr.common.RecyclerData
 import io.truereactive.demo.flickr.common.data.device.NetworkStateRepository
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
@@ -25,6 +24,7 @@ import io.truereactive.library.rx.abstraction.BasePresenter
 import io.truereactive.library.rx.abstraction.ViewChannel
 import kotlinx.android.synthetic.main.fragment_flickr_search.*
 import kotlinx.android.synthetic.main.fragment_flickr_search.view.*
+import timber.log.Timber
 import javax.inject.Inject
 
 class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
@@ -35,6 +35,12 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
     lateinit var networkStateRepository: NetworkStateRepository
     @Inject
     lateinit var searchEvents: Observable<SearchViewQueryTextEvent>
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        Timber.i("========== OnCreate")
+    }
 
     private val photosAdapter by lazy(LazyThreadSafetyMode.NONE) {
         val requestManager = Glide.with(this)
@@ -47,13 +53,17 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
     }
 
     override fun render(model: SearchState) {
-        app().trackTimePassed("RENDER SEARCH")
         photosAdapter.replace(RecyclerData(model.photos, model.photosDiff))
 
         model.scrollPosition?.let(photosList::scrollToPosition)
-        app().trackTimePassed("RENDER SEARCH FINISHED")
         // Trace.endSection()
         // Debug.stopMethodTracing()
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        Timber.i("========== Resume search")
     }
 
     override fun createPresenter(

@@ -1,7 +1,8 @@
-package io.truereactive.demo.flickr.common
+package io.truereactive.demo.core
 
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Collections.emptyList
 
 abstract class BaseRecyclerAdapter<VH : RecyclerView.ViewHolder, D> : RecyclerView.Adapter<VH>() {
 

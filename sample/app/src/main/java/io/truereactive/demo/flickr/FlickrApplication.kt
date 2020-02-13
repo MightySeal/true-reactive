@@ -28,8 +28,6 @@ open class FlickrApplication : Application() {
         // Debug.startMethodTracing("TRACE_STARTUP")
 
         Timber.plant(Timber.DebugTree())
-        super.onCreate()
-
         appComponent = DaggerApplicationComponent.factory()
             .create(this, DaggerDataComponent.factory().create(this))
 

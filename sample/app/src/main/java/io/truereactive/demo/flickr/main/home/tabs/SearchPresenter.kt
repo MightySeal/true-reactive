@@ -14,6 +14,7 @@ import io.truereactive.library.rx.reactiveui.renderWhileAlive
 import io.truereactive.library.rx.reactiveui.restoredState
 import io.truereactive.library.rx.reactiveui.saveState
 import io.truereactive.library.rx.reactiveui.viewEventsUntilDead
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 class SearchPresenter(
@@ -24,6 +25,10 @@ class SearchPresenter(
     private val initialState: String? = null
 ) : BasePresenter() {
 
+    override fun onClear() {
+        Timber.i("Create search presenter $initialState - kill")
+    }
+
     init {
 
         // .retryWhen { errors -> // TODO: Unsplash has limits so need to add exponential backoff and better errors handling
@@ -31,6 +36,8 @@ class SearchPresenter(
         //        .filter { state -> state }
         //        .observeOn(Schedulers.io())
         // }
+
+        Timber.i("Create search presenter $initialState")
 
 
         val restoredScrollPosition = channel.restoredState()
@@ -130,9 +137,7 @@ class SearchPresenter(
         }.saveState(channel) { bundle, position ->
             bundle.putInt(SCROLL_POSITION_KEY, position)
         }
-
     }
-
 
     private fun diff(first: List<PhotoModel>, second: List<PhotoModel>): DiffUtil.DiffResult =
         DiffUtil.calculateDiff(object : DiffUtil.Callback() {

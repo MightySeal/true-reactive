@@ -17,7 +17,7 @@ ext {
     glideVersion = '4.11.0'
     shimmerVersion = '0.5.0'
     lottieVersion = '3.3.0'
-    materialVersion = '1.2.0-alpha03'
+    materialVersion = '1.2.0-alpha04'
     rxbindingVersion = '3.1.0'
 
     roomVersion = '2.2.3'
@@ -26,7 +26,7 @@ ext {
     okHttpVersion = '4.3.1'
     retrofitVersion = '2.7.1'
 
-    daggerVersion = '2.25.4'
+    daggerVersion = '2.26'
 
     mockitoVersion = '2.24.0'
     mockitoKotlinVersion = '2.1.0'
@@ -36,10 +36,14 @@ ext {
     testCoreVersion = '1.3.0-alpha03'
 
     leakCanary = '2.1'
+    benchmark = '1.0.0'
+    automator = '2.2.0'
 
     modules = [
             domain     : ':sample:domain',
             data       : ':sample:data',
+            dataFlow   : ':sample:data-flow',
+            appCore    : ':sample:core',
             libraryCore: ':library:library-core',
             libraryRx  : ':library:library-rx',
             libraryFlow: ':library:library-flow'
@@ -50,6 +54,7 @@ ext {
             kotlinReflect : "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
             coroutinesCore: "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion",
             coroutinesRx  : "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$coroutinesVersion",
+            flowExtensions: "com.github.akarnokd:kotlin-flow-extensions:0.0.3",
 
             moshi         : "com.squareup.moshi:moshi:$moshiVersion",
             moshiKotlin   : "com.squareup.moshi:moshi-kotlin:$moshiVersion",
@@ -107,7 +112,9 @@ ext {
 
             coroutinesAndroid    : "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion",
 
-            leakCanary           : "com.squareup.leakcanary:leakcanary-android:$leakCanary"
+            leakCanary           : "com.squareup.leakcanary:leakcanary-android:$leakCanary",
+            benchmark            : "androidx.benchmark:benchmark-junit4:$benchmark",
+            automator            : "androidx.test.uiautomator:uiautomator:$automator"
     ]
 
     domainDependencies = [
@@ -124,10 +131,9 @@ ext {
     appDependencies = [
             [configuration: "implementation", dependency: javaDependencies.kotlin],
             [configuration: "implementation", dependency: javaDependencies.kotlinReflect],
-            [configuration: "implementation", dependency: javaDependencies.coroutinesCore],
             [configuration: "implementation", dependency: javaDependencies.coroutinesRx],
-            [configuration: "implementation", dependency: androidDependencies.coroutinesAndroid],
 
+            [configuration: "implementation", dependency: project(modules.appCore)],
             [configuration: "implementation", dependency: project(modules.libraryRx)],
             [configuration: "implementation", dependency: project(modules.data)],
             // [configuration: "implementation", dependency: project(modules.domain)],
@@ -142,7 +148,6 @@ ext {
 
             [configuration: "implementation", dependency: androidDependencies.constraintLayout],
             [configuration: "implementation", dependency: androidDependencies.cardView],
-
             [configuration: "implementation", dependency: androidDependencies.appcompat],
             [configuration: "implementation", dependency: androidDependencies.shimmer],
             [configuration: "implementation", dependency: androidDependencies.lottie],
@@ -161,7 +166,38 @@ ext {
             [configuration: "testImplementation", dependency: testDependencies.mockito],
             [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
 
-            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary]
+            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary],
+            [configuration: "androidTestImplementation", dependency: androidDependencies.benchmark],
+            [configuration: "androidTestImplementation", dependency: androidDependencies.automator]
+    ]
+    appFlowDependencies = [
+            [configuration: "implementation", dependency: javaDependencies.kotlin],
+            [configuration: "implementation", dependency: javaDependencies.kotlinReflect],
+            [configuration: "implementation", dependency: androidDependencies.coroutinesAndroid],
+
+            [configuration: "implementation", dependency: project(modules.libraryFlow)],
+            [configuration: "implementation", dependency: project(modules.appCore)],
+            [configuration: "implementation", dependency: project(modules.dataFlow)],
+
+            [configuration: "implementation", dependency: javaDependencies.dagger],
+            [configuration: "kapt", dependency: javaDependencies.daggerCompiler],
+
+            [configuration: "implementation", dependency: androidDependencies.constraintLayout],
+            [configuration: "implementation", dependency: androidDependencies.cardView],
+            [configuration: "implementation", dependency: androidDependencies.appcompat],
+            [configuration: "implementation", dependency: androidDependencies.shimmer],
+            [configuration: "implementation", dependency: androidDependencies.lottie],
+            [configuration: "implementation", dependency: androidDependencies.material],
+            [configuration: "implementation", dependency: androidDependencies.rxBinding],
+            [configuration: "implementation", dependency: androidDependencies.rxBindingMaterial],
+            [configuration: "implementation", dependency: androidDependencies.rxBindingAppcompat],
+
+            [configuration: "implementation", dependency: androidDependencies.timber],
+            [configuration: "implementation", dependency: androidDependencies.glide],
+            [configuration: "implementation", dependency: androidDependencies.glideRecycler],
+            [configuration: "kapt", dependency: androidDependencies.glideCompiler],
+
+            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary],
     ]
     dataDependencies = [
             [configuration: "implementation", dependency: javaDependencies.kotlin],
@@ -191,12 +227,49 @@ ext {
             [configuration: "testImplementation", dependency: testDependencies.mockito],
             [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
     ]
+    dataFlowDependencies = [
+            [configuration: "implementation", dependency: javaDependencies.kotlin],
+            [configuration: "api", dependency: javaDependencies.coroutinesCore],
+            // [configuration: "implementation", dependency: project(modules.domain)],
+            [configuration: "implementation", dependency: javaDependencies.retrofit],
+            [configuration: "implementation", dependency: javaDependencies.moshi],
+            [configuration: "kapt", dependency: javaDependencies.moshiCodegen],
+            [configuration: "implementation", dependency: javaDependencies.moshiRetrofit],
+            [configuration: "implementation", dependency: javaDependencies.moshiKotlin],
+            [configuration: "implementation", dependency: javaDependencies.okHttp],
+            [configuration: "implementation", dependency: javaDependencies.okHttpLogging],
+
+            [configuration: "implementation", dependency: javaDependencies.dagger],
+            [configuration: "kapt", dependency: javaDependencies.daggerCompiler],
+
+            [configuration: "implementation", dependency: javaDependencies.javax],
+            [configuration: "implementation", dependency: androidDependencies.timber],
+            [configuration: "implementation", dependency: androidDependencies.roomRuntime],
+            [configuration: "kapt", dependency: androidDependencies.roomCompiler],
+
+            [configuration: "testImplementation", dependency: testDependencies.robolectric],
+            [configuration: "testImplementation", dependency: testDependencies.junit],
+            [configuration: "testImplementation", dependency: testDependencies.mockito],
+            [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
+    ]
+    appCoreDependencies = [
+            [configuration: "implementation", dependency: javaDependencies.kotlin],
+            [configuration: "implementation", dependency: androidDependencies.constraintLayout],
+            [configuration: "implementation", dependency: androidDependencies.cardView],
+            [configuration: "implementation", dependency: androidDependencies.appcompat],
+            [configuration: "implementation", dependency: androidDependencies.shimmer],
+            [configuration: "implementation", dependency: androidDependencies.lottie],
+            [configuration: "implementation", dependency: androidDependencies.material]
+    ]
 
     libraryCoreDependencies = [
             [configuration: "api", dependency: javaDependencies.kotlin],
             [configuration: "api", dependency: javaDependencies.kotlinReflect],
             [configuration: "api", dependency: androidDependencies.timber],
             [configuration: "api", dependency: androidDependencies.appcompat],
+            [configuration: "implementation", dependency: androidDependencies.glide],
+            [configuration: "implementation", dependency: androidDependencies.glideRecycler],
+            [configuration: "kapt", dependency: androidDependencies.glideCompiler]
     ]
 
     libraryRxDependencies = [
@@ -234,6 +307,9 @@ ext {
             [configuration: "api", dependency: javaDependencies.kotlinReflect],
             [configuration: "api", dependency: javaDependencies.coroutinesCore],
             [configuration: "api", dependency: androidDependencies.coroutinesAndroid],
+            [configuration: "api", dependency: javaDependencies.rxJava],
+            [configuration: "api", dependency: javaDependencies.flowExtensions],
+            [configuration: "implementation", dependency: javaDependencies.coroutinesRx],
 
             [configuration: "api", dependency: androidDependencies.timber],
 
