@@ -24,7 +24,6 @@ import io.truereactive.library.flow.asFlow
 import kotlinx.android.synthetic.main.fragment_flickr_search.*
 import kotlinx.android.synthetic.main.fragment_flickr_search.view.*
 import kotlinx.coroutines.flow.Flow
-import timber.log.Timber
 import javax.inject.Inject
 
 class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
@@ -34,12 +33,6 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
     lateinit var photosRepository: PhotosRepository
     @Inject
     lateinit var searchEvents: Flow<SearchViewQueryTextEvent>
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        Timber.i("========== OnCreate")
-    }
 
     private val photosAdapter by lazy(LazyThreadSafetyMode.NONE) {
         val requestManager = Glide.with(this)
@@ -55,14 +48,6 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
         photosAdapter.replace(RecyclerData(model.photos, model.photosDiff))
 
         model.scrollPosition?.let(photosList::scrollToPosition)
-        // Trace.endSection()
-        // Debug.stopMethodTracing()
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        Timber.i("========== Resume search")
     }
 
     override fun createPresenter(

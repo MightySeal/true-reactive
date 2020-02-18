@@ -7,7 +7,6 @@ import hu.akarnokd.kotlin.flow.takeUntil
 import io.truereactive.library.core.ViewEvents
 import io.truereactive.library.core.ViewState
 import kotlinx.coroutines.flow.*
-import timber.log.Timber
 
 internal inline fun Activity.executeIfBase(action: (BaseActivity<ViewEvents, Any>) -> Unit) {
     (this as? BaseActivity<ViewEvents, Any>)?.let(action)
@@ -58,7 +57,6 @@ suspend fun <VE : ViewEvents, M> Flow<M>.renderWhileAlive(channel: ViewChannel<V
 
 fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.mapUntilDead(block: VE.() -> T): Flow<T> =
     this.viewEvents
-        .onEach { Timber.i("========== Emit $it") }
         .filterNotNull()
         .map { block(it) }
         .takeUntil(this.state.filter { it == ViewState.Dead })

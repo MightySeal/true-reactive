@@ -8,16 +8,13 @@ import io.truereactive.library.core.ViewEvents
 import io.truereactive.library.flow.BaseActivity
 import io.truereactive.library.flow.BasePresenter
 import io.truereactive.library.flow.ViewChannel
-import timber.log.Timber
 
 class MainActivity : BaseActivity<MainFlickrEvents, Unit>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Timber.i("========== before Oncreate")
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_flickr)
-        Timber.i("========== Oncreate")
     }
 
     override fun createPresenter(
@@ -29,15 +26,12 @@ class MainActivity : BaseActivity<MainFlickrEvents, Unit>() {
     }
 
     override fun createViewHolder(view: View): MainFlickrEvents {
-        Timber.i("========== Create vh")
         return MainFlickrEvents(::openFeed)
     }
 
     override fun render(model: Unit) {}
 
     private fun openFeed() {
-
-        Timber.i("========== Open feed")
         supportFragmentManager
             .beginTransaction()
             .replace(R.id.container, FeedFragment.newInstance(), null)

@@ -6,16 +6,15 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
+import hu.akarnokd.kotlin.flow.publish
+import hu.akarnokd.kotlin.flow.replay
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.truereactive.library.core.*
 import io.truereactive.library.core.Optional
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 import shark.ObjectInspector
 import timber.log.Timber
 import java.util.*
@@ -37,29 +36,23 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
     // TODO: Use reduce like in fragment
     // TODO: possibly dispose when activity count is 0. Maybe sort of refCount base on activity count
-    private val rxActivityCallbacks: Observable<ActivityViewState<ViewEvents, Any>> by lazy(
+    private val rxActivityCallbacks: Flow<ActivityViewState<ViewEvents, Any>> by lazy(
         LazyThreadSafetyMode.NONE
     ) {
 
-        Observable.create<ActivityViewState<ViewEvents, Any>> { emitter ->
+        callbackFlow<ActivityViewState<ViewEvents, Any>> {
             val callbacks = object : AbstractActivityCallbacks() {
 
                 override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
-                    Timber.i("========== onActivityCreated $activity")
                     activity.executeIfBase { baseActivity ->
                         bindPresenter(
                             baseActivity,
                             savedInstanceState,
-                            rxActivityCallbacks
-                                .doOnNext {
-                                    Timber.i("========== onNext activity acllbacks $it")
-                                }.doOnSubscribe {
-                                    Timber.i("========== onSubscribe activity acllbacks")
-                                },
+                            rxActivityCallbacks,
                             baseActivity.intent.extras
                         )
 
-                        emitter.onNext(
+                        offer(
                             ActivityViewState(
                                 host = baseActivity,
                                 view = null,
@@ -72,9 +65,8 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 }
 
                 override fun onActivityStarted(activity: Activity) {
-                    Timber.i("========== onActivityStarted $activity")
                     activity.executeIfBase { baseActivity ->
-                        emitter.onNext(
+                        offer(
                             ActivityViewState(
                                 host = baseActivity,
                                 view = baseActivity.window.decorView.rootView,
@@ -86,10 +78,8 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 }
 
                 override fun onActivityResumed(activity: Activity) {
-                    Timber.i("========== onActivityResumed $activity")
-
                     activity.executeIfBase { baseActivity ->
-                        emitter.onNext(
+                        offer(
                             ActivityViewState(
                                 host = baseActivity,
                                 view = baseActivity.window.decorView.rootView,
@@ -101,9 +91,8 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 }
 
                 override fun onActivityPaused(activity: Activity) {
-                    Timber.i("========== onActivityPaused $activity")
                     activity.executeIfBase { baseActivity ->
-                        emitter.onNext(
+                        offer(
                             ActivityViewState(
                                 host = baseActivity,
                                 view = baseActivity.window.decorView.rootView,
@@ -115,9 +104,8 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 }
 
                 override fun onActivityStopped(activity: Activity) {
-                    Timber.i("========== onActivityStopped $activity")
                     activity.executeIfBase { baseActivity ->
-                        emitter.onNext(
+                        offer(
                             ActivityViewState(
                                 host = baseActivity,
                                 view = null,
@@ -132,7 +120,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                     Timber.d("Activity destroyed: ${activity::class.simpleName}, isFinishing ${activity.isFinishing} changing config ${activity.isChangingConfigurations}")
                     activity.executeIfBase { baseActivity ->
 
-                        emitter.onNext(
+                        offer(
                             ActivityViewState(
                                 host = baseActivity,
                                 view = null,
@@ -142,7 +130,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                         )
 
                         if (activity.isFinishing && !activity.isChangingConfigurations) {
-                            emitter.onNext(
+                            offer(
                                 ActivityViewState(
                                     host = baseActivity,
                                     view = null,
@@ -159,7 +147,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                     activity.executeIfBase { baseActivity ->
                         outState.putString(ViewDelegate.VIEW_ID_KEY, baseActivity.viewIdKey)
 
-                        emitter.onNext(
+                        offer(
                             ActivityViewState(
                                 host = baseActivity,
                                 view = null,
@@ -175,19 +163,18 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
             app.registerActivityLifecycleCallbacks(callbacks)
 
-            emitter.setCancellable {
-                Timber.d("Unregister activity callbacks")
+            awaitClose {
                 app.unregisterActivityLifecycleCallbacks(callbacks)
             }
-        }.share()
+        }
     }
 
-    private val rxFragmentCallbacks: Observable<FragmentViewState<ViewEvents, Any>> by lazy(
+    private val rxFragmentCallbacks: Flow<FragmentViewState<ViewEvents, Any>> by lazy(
         LazyThreadSafetyMode.NONE
     ) {
         rxActivityCallbacks
             .filter { it.state == ViewState.Created }
-            .switchMap { activityState ->
+            .flatMapLatest { activityState ->
 
                 // This hack is need to properly handle fragment destruction in some cases (i.e. viewpager).
                 //  In this case fragment is destroyed *after* the parent activity is destroyed,
@@ -196,7 +183,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 val refCount =
                     mutableMapOf<KClass<out BaseFragment<ViewEvents, Any>>, AtomicInteger>()
 
-                Observable.create<FragmentViewState<ViewEvents, Any>> { emitter ->
+                callbackFlow<FragmentViewState<ViewEvents, Any>> {
                     val callbacks = object : FragmentManager.FragmentLifecycleCallbacks() {
                         override fun onFragmentPreCreated(
                             fm: FragmentManager,
@@ -226,7 +213,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                         ) {
                             f.executeIfBase {
                                 Timber.d("Fragment created: ${it::class.simpleName} — ${it.viewIdKey}")
-                                emitter.onNext(
+                                offer(
                                     FragmentViewState(
                                         host = it,
                                         view = v,
@@ -246,7 +233,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                             f.executeIfBase { fr ->
                                 outState.putString(ViewDelegate.VIEW_ID_KEY, fr.viewIdKey)
 
-                                emitter.onNext(
+                                offer(
                                     FragmentViewState(
                                         host = fr,
                                         view = null,
@@ -260,7 +247,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
                         override fun onFragmentStarted(fm: FragmentManager, f: Fragment) {
                             f.executeIfBase {
-                                emitter.onNext(
+                                offer(
                                     FragmentViewState(
                                         host = it,
                                         view = null,
@@ -273,7 +260,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
                         override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
                             f.executeIfBase {
-                                emitter.onNext(
+                                offer(
                                     FragmentViewState(
                                         host = it,
                                         view = null,
@@ -286,7 +273,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
                         override fun onFragmentPaused(fm: FragmentManager, f: Fragment) {
                             f.executeIfBase {
-                                emitter.onNext(
+                                offer(
                                     FragmentViewState(
                                         host = it,
                                         view = null,
@@ -301,7 +288,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
                             Timber.d("Fragment stopped: ${f::class.simpleName}")
                             f.executeIfBase { fr ->
-                                emitter.onNext(
+                                offer(
                                     FragmentViewState(
                                         host = fr,
                                         view = null,
@@ -317,7 +304,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                             f.executeIfBase { fr ->
 
                                 Timber.d("Fragment destroyed: ${f::class.simpleName} — ${fr.viewIdKey}")
-                                emitter.onNext(
+                                offer(
                                     FragmentViewState(
                                         host = fr,
                                         view = null,
@@ -330,7 +317,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
                                 if ((fr.requireActivity().isFinishing || fr.isRemoving) && !fr.requireActivity().isChangingConfigurations) {
 
-                                    emitter.onNext(
+                                    offer(
                                         FragmentViewState(
                                             host = fr,
                                             view = null,
@@ -346,7 +333,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                                     die(fr)
 
                                     if (refCount.isEmpty()) {
-                                        emitter.onComplete()
+                                        close()
                                     }
                                 }
                             }
@@ -356,33 +343,32 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                     val fragmentManager = activityState.host.supportFragmentManager
 
                     fragmentManager.registerFragmentLifecycleCallbacks(callbacks, true)
-                    emitter.setCancellable {
+                    awaitClose {
                         fragmentManager.unregisterFragmentLifecycleCallbacks(callbacks)
                     }
                 }
             }
-            .share()
+        // .share()
+        // .asFlow()
     }
 
     private val hostCallbacks = rxFragmentCallbacks
 
     init {
-        Timber.i("========== Init")
 
-        hostCallbacks
-            .doOnSubscribe {
-                Timber.i("========== Subscribe for host callback")
-            }.doOnNext {
-                Timber.i("========== Next host callback $it")
-            }
-            .subscribe({
-                // Timber.d("Host rx: $it")
-            }, {
+        val job = GlobalScope.launch {
+            hostCallbacks
+                .collect {
+                    // Timber.d("Host rx: $it")
+                }
+
+            /*{
                 Timber.e(it)
                 if (BuildConfig.DEBUG) {
                     throw RuntimeException(it)
                 }
-            }).let(compositeDisposable::add)
+            })*/
+        }
     }
 
     private fun <VE : ViewEvents, M> die(host: BaseHost<VE, M>) {
@@ -391,8 +377,6 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
         CustomCache.remove(host.viewIdKey)
 
         PresenterCache.remove(host.viewIdKey).also {
-            // Timber.d("Dispose ${it.disposable.size()} elements")
-            // it.dispose()
             it.cancel()
         }
     }
@@ -400,7 +384,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
     private fun <VE : ViewEvents, VS : AndroidViewState<VE, M>, M> bindPresenter(
         host: BaseHost<VE, M>,
         savedInstanceState: Bundle?,
-        hostEvents: Observable<VS>,
+        hostEvents: Flow<VS>,
         args: Bundle?
     ): String {
 
@@ -435,17 +419,15 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
         host: BaseHost<VE, M>,
         hostKey: String,
         savedInstanceState: Bundle?,
-        hostEvents: Observable<VS>,
+        hostEvents: Flow<VS>,
         args: Bundle?
     ): BasePresenter {
 
-        // TODO: Make state for for internal and external use. Internal has SavingState, external doesn't.
+        // TODO: publish and share do not return multicast flow.
         val state = hostEvents
-            .doOnSubscribe { Timber.i("========== Subscribe for state") }
-            .doOnNext { Timber.i("========== emit host events $it") }
             .filter { it.key == hostKey }
             .takeUntil { it.state == ViewState.Dead }
-            .share()
+            .publish { it }
 
         val restoredState = state
             .filter { it.state == ViewState.Created || it.state == ViewState.Destroyed }
@@ -457,7 +439,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 }
             }
             .distinctUntilChanged()
-            .replay(1)
+            .replay(1) { it }
 
         val outState = state
             .map {
@@ -468,14 +450,14 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 }
             }
             .distinctUntilChanged()
-            .replay(1)
+            .replay(1) { it }
 
         val hostState = state
             .map { it.state }
-            .replay(1)
+            .replay(1) { it }
 
         val viewState = state
-            .replay(1)
+            .replay(1) { it }
 
         val viewEvents = viewState
             .distinctUntilChanged { prev, current ->
@@ -488,8 +470,6 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                     Optional(null)
                 }
             }
-            .doOnSubscribe { Timber.i("========== start view events observable") }
-            .replay(1)
 
         val renderer = viewState
             .distinctUntilChanged(::sameAliveState)
@@ -500,18 +480,27 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                     Optional<Renderer<M>>(null)
                 }
             }
-            .replay(1)
 
         // TODO: Use flow extensions
-        val restoredStateFlow =
-            restoredState.asFlow().map { it.value }.flowOn(Dispatchers.Main.immediate)
-        val outStateFlow = outState.asFlow().map { it.value }.flowOn(Dispatchers.Main.immediate)
+        val restoredStateFlow = restoredState
+            .map { it.value }
+            .replay { it }
+            .flowOn(Dispatchers.Main.immediate)
+        val outStateFlow = outState
+            .map { it.value }
+            .replay { it }
+            .flowOn(Dispatchers.Main.immediate)
         // state = hostState.observeOn(Schedulers.computation()),
-        val stateFlow = hostState.asFlow().flowOn(Dispatchers.Main.immediate)
-        val viewEventsFlow = viewEvents.asFlow().map { it.value }.flowOn(Dispatchers.Main.immediate)
-            .onEach { Timber.i("========== emit view events $it") }
-            .onStart { Timber.i("========== staart view events") }
-        val rendererFlow = renderer.asFlow().map { it.value }.flowOn(Dispatchers.Main.immediate)
+        val stateFlow = hostState
+            .replay { it }
+            .flowOn(Dispatchers.Main.immediate)
+        val viewEventsFlow = viewEvents.map { it.value }
+            .replay { it }
+            .flowOn(Dispatchers.Main.immediate)
+        val rendererFlow = renderer
+            .replay { it }
+            .map { it.value }
+            .flowOn(Dispatchers.Main.immediate)
 
         val viewChannel = ViewChannel(
             restoredState = restoredStateFlow,
@@ -521,32 +510,12 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
             renderer = rendererFlow
         )
 
-        /*val restoredStateDisposable = restoredState.connect()
-        val savedStateDisposable = outState.connect()
-        val hostStateDisposable = hostState.connect()
-        val viewStateDisposable = viewState.connect()
-        val viewEventsDisposable = viewEvents.connect()
-        val rendererDisposable = renderer.connect()*/
-
         return host.createPresenter(viewChannel, args, savedInstanceState).also { presenter ->
-            Timber.i("========== Launch")
             presenter.launch { restoredStateFlow.collect {} }
-            Timber.i("========== Launch 1")
             presenter.launch { outStateFlow.collect {} }
-            Timber.i("========== Launch 2")
             presenter.launch { stateFlow.collect {} }
-            Timber.i("========== Launch 3")
             presenter.launch { viewEventsFlow.collect {} }
-            Timber.i("========== Launch 4")
             presenter.launch { rendererFlow.collect {} }
-            Timber.i("========== Launch 5")
-
-            /*it.disposable.add(restoredStateDisposable)
-            it.disposable.add(savedStateDisposable)
-            it.disposable.add(hostStateDisposable)
-            it.disposable.add(viewStateDisposable)
-            it.disposable.add(viewEventsDisposable)
-            it.disposable.add(rendererDisposable)*/
         }
     }
 }
@@ -562,5 +531,16 @@ fun <T> Observable<T>.asFlow(): Flow<T> = callbackFlow {
 
     awaitClose {
         disposable.dispose()
+    }
+}
+
+// TODO: Make proper cancellation
+@ExperimentalCoroutinesApi
+public fun <T> Flow<T>.takeUntil(predicate: suspend (T) -> Boolean): Flow<T> = flow {
+    collect { value ->
+        emit(value)
+        if (predicate(value)) {
+
+        }
     }
 }

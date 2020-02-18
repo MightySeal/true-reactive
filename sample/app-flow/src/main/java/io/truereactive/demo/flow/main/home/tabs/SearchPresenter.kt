@@ -7,7 +7,6 @@ import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
 import io.truereactive.library.flow.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 class SearchPresenter(
     private val channel: ViewChannel<SearchEvents, SearchState>,
@@ -16,10 +15,6 @@ class SearchPresenter(
     private val initialState: String? = null
 ) : BasePresenter() {
 
-    override fun onClear() {
-        Timber.i("Create search presenter $initialState - kill")
-    }
-
     init {
 
         // .retryWhen { errors -> // TODO: Unsplash has limits so need to add exponential backoff and better errors handling
@@ -27,9 +22,6 @@ class SearchPresenter(
         //        .filter { state -> state }
         //        .observeOn(Schedulers.io())
         // }
-
-        Timber.i("Create search presenter $initialState")
-
 
         val restoredScrollPosition = channel.restoredState()
             .map {

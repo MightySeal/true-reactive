@@ -18,7 +18,6 @@ import io.truereactive.library.flow.*
 import kotlinx.android.synthetic.main.fragment_feed.*
 import kotlinx.android.synthetic.main.fragment_feed.view.*
 import kotlinx.coroutines.flow.Flow
-import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
@@ -62,7 +61,6 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
     }
 
     override fun render(model: FeedState) {
-        Timber.i("========== Render $model")
         adapter.setSources(model.sources)
         model.selectedPage?.let {
             sourcesPager.setCurrentItem(it, false)
@@ -70,9 +68,7 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
     }
 
     /*override fun render(model: FeedState) {
-        Timber.i("========== Render $model")
         if (model.restored) {
-            Timber.i("========== Create adapter")
             adapter = createAdapter(model.sources)
         } else {
             if (!::adapter.isInitialized) {
