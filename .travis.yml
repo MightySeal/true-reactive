@@ -1,0 +1,10 @@
+language: android
+
+jdk:
+  - openjdk11
+
+script:
+  - ./gradlew :library:library-rx:assemble
+
+after_success:
+  - .buildscript/deploy.sh

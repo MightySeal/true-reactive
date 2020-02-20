@@ -35,7 +35,7 @@ ext {
     robolectricVersion = '4.3'
     testCoreVersion = '1.3.0-alpha03'
 
-    leakCanary = '2.1'
+    leakCanary = '2.2'
     benchmark = '1.0.0'
     automator = '2.2.0'
 
@@ -166,7 +166,7 @@ ext {
             [configuration: "testImplementation", dependency: testDependencies.mockito],
             [configuration: "testImplementation", dependency: testDependencies.mockitoKotlin],
 
-            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary],
+            [configuration: "implementation", dependency: androidDependencies.leakCanary],
             [configuration: "androidTestImplementation", dependency: androidDependencies.benchmark],
             [configuration: "androidTestImplementation", dependency: androidDependencies.automator]
     ]
@@ -197,7 +197,7 @@ ext {
             [configuration: "implementation", dependency: androidDependencies.glideRecycler],
             [configuration: "kapt", dependency: androidDependencies.glideCompiler],
 
-            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary],
+            [configuration: "implementation", dependency: androidDependencies.leakCanary],
     ]
     dataDependencies = [
             [configuration: "implementation", dependency: javaDependencies.kotlin],
@@ -283,7 +283,7 @@ ext {
             [configuration: "api", dependency: androidDependencies.rxAndroid],
 
             [configuration: "api", dependency: androidDependencies.appcompat],
-            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary],
+            [configuration: "implementation", dependency: androidDependencies.leakCanary],
 
             [configuration: "testImplementation", dependency: testDependencies.robolectric],
             [configuration: "testImplementation", dependency: testDependencies.junit],
@@ -314,7 +314,7 @@ ext {
             [configuration: "api", dependency: androidDependencies.timber],
 
             [configuration: "api", dependency: androidDependencies.appcompat],
-            [configuration: "debugImplementation", dependency: androidDependencies.leakCanary],
+            [configuration: "implementation", dependency: androidDependencies.leakCanary],
 
             [configuration: "testImplementation", dependency: testDependencies.robolectric],
             [configuration: "testImplementation", dependency: testDependencies.junit],

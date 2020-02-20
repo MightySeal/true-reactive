@@ -1,0 +1,41 @@
+apply plugin: 'com.jfrog.bintray'
+
+group 'io.truereactive.library.rx"'
+version '0.0.1'
+
+project.ext {
+    mavGitUrl = 'https://github.com/MightySeal/true-reactive.git'
+    mavProjectName = 'AwesomeLib'
+    mavLibraryLicenses = ["Apache-2.0":'http://www.apache.org/licenses/LICENSE-2.0.txt']
+    mavLibraryDescription = "A way to create truly reactive apps"
+    mavPublishToMavenLocal = true
+    mavSiteUrl = 'https://github.com/MightySeal/true-reactive'
+}
+
+def properties = new Properties()
+properties.load(new FileInputStream("local.properties"))
+
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+    publications = ['Production']
+    configurations = ['archives']
+    override = true
+    pkg {
+        repo = 'maven'
+        name = 'True-reactive'
+        description = "It's an awesome lib"
+        publicDownloadNumbers = true
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/MightySeal/true-reactive'
+        version {
+            name = this.version
+            desc = "Version ${this.version}"
+            released = new Date()
+            vcsTag = this.version
+        }
+    }
+}
+
+apply from: 'https://raw.githubusercontent.com/sky-uk/gradle-maven-plugin/master/gradle-mavenizer.gradle'
+
