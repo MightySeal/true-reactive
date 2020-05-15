@@ -6,7 +6,6 @@ import io.truereactive.library.setup.activity.TestActivity
 import org.junit.Test
 import java.lang.ref.WeakReference
 
-// TODO: Not working
 class TestActivityLifecycle {
 
     @Test
@@ -20,7 +19,6 @@ class TestActivityLifecycle {
         activityScenario.onActivity {
             activityRef = WeakReference(it)
         }
-
         activityScenario.moveToState(Lifecycle.State.RESUMED)
 
         activityScenario.moveToState(Lifecycle.State.DESTROYED)

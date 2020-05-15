@@ -20,6 +20,8 @@ class FlowApplication : Application() {
         appComponent = DaggerApplicationComponent.factory()
             .create(this, DaggerDataComponent.factory().create(this))
 
+        Timber.i("========== Start app")
+
         reactiveApp = ReactiveApplicationCompat(this)
     }
 }

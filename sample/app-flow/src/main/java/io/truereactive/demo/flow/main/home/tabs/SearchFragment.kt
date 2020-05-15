@@ -23,6 +23,7 @@ import io.truereactive.library.flow.ViewChannel
 import io.truereactive.library.flow.asFlow
 import kotlinx.android.synthetic.main.fragment_flickr_search.*
 import kotlinx.android.synthetic.main.fragment_flickr_search.view.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -53,7 +54,8 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
     override fun createPresenter(
         viewChannel: ViewChannel<SearchEvents, SearchState>,
         args: Bundle?,
-        savedState: Bundle?
+        savedState: Bundle?,
+        scope: CoroutineScope
     ): BasePresenter {
 
         val component = (requireParentFragment() as FeedFragment).getComponent()
@@ -63,6 +65,7 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
             .inject(this)
 
         return SearchPresenter(
+            scope,
             viewChannel,
             searchEvents,
             photosRepository,

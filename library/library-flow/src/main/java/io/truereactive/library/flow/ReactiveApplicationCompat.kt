@@ -6,10 +6,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import hu.akarnokd.kotlin.flow.publish
-import hu.akarnokd.kotlin.flow.replay
+import com.github.rbusarow.shareIn
 import io.reactivex.Observable
-import io.reactivex.disposables.CompositeDisposable
 import io.truereactive.library.core.*
 import io.truereactive.library.core.Optional
 import kotlinx.coroutines.*
@@ -18,11 +16,17 @@ import kotlinx.coroutines.flow.*
 import shark.ObjectInspector
 import timber.log.Timber
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
 
 @ExperimentalCoroutinesApi
-class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
+class ReactiveApplicationCompat(app: Application) : ReactiveApplication,
+    CoroutineScope {
+    // CoroutineScope by MainScope() {
+
+    override val coroutineContext: CoroutineContext = SupervisorJob() + Dispatchers.Main.immediate
 
     val optionalReporter = ObjectInspector { reporter ->
         reporter.whenInstanceOf(Optional::class) { instance ->
@@ -32,19 +36,18 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
         }
     }
 
-    private val compositeDisposable = CompositeDisposable()
-
     // TODO: Use reduce like in fragment
     // TODO: possibly dispose when activity count is 0. Maybe sort of refCount base on activity count
     private val rxActivityCallbacks: Flow<ActivityViewState<ViewEvents, Any>> by lazy(
         LazyThreadSafetyMode.NONE
     ) {
-
         callbackFlow<ActivityViewState<ViewEvents, Any>> {
             val callbacks = object : AbstractActivityCallbacks() {
 
                 override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+
                     activity.executeIfBase { baseActivity ->
+
                         bindPresenter(
                             baseActivity,
                             savedInstanceState,
@@ -65,6 +68,8 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 }
 
                 override fun onActivityStarted(activity: Activity) {
+
+                    Timber.i("========== New state is active $isActive")
                     activity.executeIfBase { baseActivity ->
                         offer(
                             ActivityViewState(
@@ -79,6 +84,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
                 override fun onActivityResumed(activity: Activity) {
                     activity.executeIfBase { baseActivity ->
+
                         offer(
                             ActivityViewState(
                                 host = baseActivity,
@@ -166,7 +172,12 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
             awaitClose {
                 app.unregisterActivityLifecycleCallbacks(callbacks)
             }
-        }
+        }.flowOn(Dispatchers.Main.immediate)
+            .onStart { Timber.i("========== Start activity callbacks") }
+            .onCompletion { Timber.i("========== Stop activity callbacks") }
+            .onEach { Timber.i("========== New state ${it.host::class.simpleName}, ${it.state.name}") }
+            // .shareIn(this)
+            .shareIn(scope = this, tag = "rxActivityCallbacks")
     }
 
     private val rxFragmentCallbacks: Flow<FragmentViewState<ViewEvents, Any>> by lazy(
@@ -315,6 +326,9 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
                                 val count = refCount[fr::class]?.decrementAndGet()
 
+                                Timber.i("Fragment destroyed: ${f::class.simpleName} — ${fr.viewIdKey} ${fr.requireActivity().isFinishing}, ${fr.isRemoving}, ${!fr.requireActivity().isChangingConfigurations}")
+                                Timber.i("Fragment destroyed: ${f::class.simpleName} — overall ${(fr.requireActivity().isFinishing || fr.isRemoving) && !fr.requireActivity().isChangingConfigurations}")
+
                                 if ((fr.requireActivity().isFinishing || fr.isRemoving) && !fr.requireActivity().isChangingConfigurations) {
 
                                     offer(
@@ -348,18 +362,19 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                     }
                 }
             }
-        // .share()
-        // .asFlow()
+            .flowOn(Dispatchers.Main.immediate)
+            // .shareIn(this)
+            .shareIn(scope = this, tag = "rxFragmentCallbacks")
     }
 
     private val hostCallbacks = rxFragmentCallbacks
 
     init {
 
-        val job = GlobalScope.launch {
+        val job = launch(Dispatchers.Main.immediate) {
             hostCallbacks
                 .collect {
-                    // Timber.d("Host rx: $it")
+                    Timber.d("Host rx: $it")
                 }
 
             /*{
@@ -381,6 +396,12 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
         }
     }
 
+    private fun Any.logForClass(name: String, log: String) {
+        if (this::class.simpleName == name) {
+            Timber.i("$name: $log")
+        }
+    }
+
     private fun <VE : ViewEvents, VS : AndroidViewState<VE, M>, M> bindPresenter(
         host: BaseHost<VE, M>,
         savedInstanceState: Bundle?,
@@ -390,12 +411,17 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
 
         val viewKey = savedInstanceState?.getString(ViewDelegate.VIEW_ID_KEY)
 
+        host.logForClass("SearchFragment", PresenterCache.log())
+        host.logForClass("SearchFragment", "Search presenter: $viewKey")
+
         if (viewKey != null) { // Restore previous state
 
             host.viewIdKey = viewKey
             val presenter = if (PresenterCache.hasPresenter(viewKey)) { // Configuration changed
+                host.logForClass("SearchFragment", "Has key, restore")
                 PresenterCache.getPresenter(viewKey)
             } else {    // Process recreation
+                host.logForClass("SearchFragment", "Has key, create new presenter")
                 createPresenter(host, viewKey, savedInstanceState, hostEvents, args).also {
                     PresenterCache.putPresenter(viewKey, it)
                 }
@@ -404,6 +430,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
             host.presenter = presenter
             return viewKey
         } else { // Create new, first launch
+            host.logForClass("SearchFragment", "No key, create new presenter")
             val viewIdKey = UUID.randomUUID().toString()
             host.viewIdKey = viewIdKey
 
@@ -423,11 +450,25 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
         args: Bundle?
     ): BasePresenter {
 
-        // TODO: publish and share do not return multicast flow.
+        val hostName = host::class.simpleName
+
+
+        // val presenterScope = MainScope()
+        val presenterScope = object : CoroutineScope {
+            override val coroutineContext: CoroutineContext =
+                SupervisorJob() + Dispatchers.Main.immediate
+        }
+
+        val shareScope = presenterScope
+        // val shareScope = this
+
         val state = hostEvents
             .filter { it.key == hostKey }
+            .map { it as AndroidViewState<VE, M> }
+            .scanReduce { previous, current -> current.reduce(previous) }
             .takeUntil { it.state == ViewState.Dead }
-            .publish { it }
+            .flowOn(Dispatchers.Main.immediate)
+            .shareIn(scope = shareScope, tag = "state-$hostName")
 
         val restoredState = state
             .filter { it.state == ViewState.Created || it.state == ViewState.Destroyed }
@@ -439,7 +480,9 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 }
             }
             .distinctUntilChanged()
-            .replay(1) { it }
+            .map { it.value }
+            .flowOn(Dispatchers.Main.immediate)
+            .shareIn(shareScope, 1, "restoredState-$hostName")
 
         val outState = state
             .map {
@@ -450,14 +493,18 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
                 }
             }
             .distinctUntilChanged()
-            .replay(1) { it }
+            .map { it.value }
+            .flowOn(Dispatchers.Main.immediate)
+            .shareIn(shareScope, 1, "outState-$hostName")
 
         val hostState = state
             .map { it.state }
-            .replay(1) { it }
+            .flowOn(Dispatchers.Main.immediate)
+            .shareIn(shareScope, 1, "hostState-$hostName")
 
         val viewState = state
-            .replay(1) { it }
+            .flowOn(Dispatchers.Main.immediate)
+            .shareIn(shareScope, tag = "viewState-$hostName")
 
         val viewEvents = viewState
             .distinctUntilChanged { prev, current ->
@@ -465,61 +512,78 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication {
             }
             .map { vs ->
                 if (vs.state.isAlive && vs.view != null) {
-                    Optional(vs.host.createViewHolder(vs.view!!))
+                    vs.host.createViewHolder(vs.view!!)
                 } else {
-                    Optional(null)
+                    null
                 }
             }
+            .flowOn(Dispatchers.Main.immediate)
+            .shareIn(shareScope, 1, "viewEvents-$hostName")
 
         val renderer = viewState
             .distinctUntilChanged(::sameAliveState)
             .map { vs ->
                 if (vs.state.isAlive) {
-                    Optional(vs.host)
+                    vs.host
                 } else {
-                    Optional<Renderer<M>>(null)
+                    null
                 }
             }
-
-        // TODO: Use flow extensions
-        val restoredStateFlow = restoredState
-            .map { it.value }
-            .replay { it }
             .flowOn(Dispatchers.Main.immediate)
-        val outStateFlow = outState
-            .map { it.value }
-            .replay { it }
-            .flowOn(Dispatchers.Main.immediate)
-        // state = hostState.observeOn(Schedulers.computation()),
-        val stateFlow = hostState
-            .replay { it }
-            .flowOn(Dispatchers.Main.immediate)
-        val viewEventsFlow = viewEvents.map { it.value }
-            .replay { it }
-            .flowOn(Dispatchers.Main.immediate)
-        val rendererFlow = renderer
-            .replay { it }
-            .map { it.value }
-            .flowOn(Dispatchers.Main.immediate)
+            .shareIn(shareScope, 1, "renderer-$hostName")
 
         val viewChannel = ViewChannel(
-            restoredState = restoredStateFlow,
-            outState = outStateFlow,
-            state = stateFlow,
-            viewEvents = viewEventsFlow,
-            renderer = rendererFlow
+            restoredState = restoredState,
+            outState = outState,
+            state = hostState,
+            viewEvents = viewEvents,
+            renderer = renderer
         )
 
-        return host.createPresenter(viewChannel, args, savedInstanceState).also { presenter ->
-            presenter.launch { restoredStateFlow.collect {} }
-            presenter.launch { outStateFlow.collect {} }
-            presenter.launch { stateFlow.collect {} }
-            presenter.launch { viewEventsFlow.collect {} }
-            presenter.launch { rendererFlow.collect {} }
+        Timber.i("++++++++++ launch-$hostName collectors")
+
+        presenterScope.launch(Dispatchers.Main.immediate) {
+            restoredState.collect {
+                Timber.i("++++++++++ next restoredState-$hostName $it")
+            }
         }
+        Timber.i("++++++++++ restoredState-$hostName done")
+
+        presenterScope.launch(Dispatchers.Main.immediate) {
+            outState.collect {
+                Timber.i("++++++++++ next outState-$hostName $it")
+            }
+        }
+        Timber.i("++++++++++ outState-$hostName done")
+
+        presenterScope.launch(Dispatchers.Main.immediate) {
+            state.collect {
+                Timber.i("++++++++++ next state-$hostName $it, ${it.state.name}")
+            }
+        }
+        Timber.i("++++++++++ state-$hostName done")
+
+        presenterScope.launch(Dispatchers.Main.immediate) {
+            viewEvents.collect {
+                val name = it?.let { it::class.simpleName } ?: "null"
+                Timber.i("++++++++++ next viewEvents-$hostName $it")
+            }
+        }
+        Timber.i("++++++++++ viewEvents-$hostName done")
+
+        presenterScope.launch(Dispatchers.Main.immediate) {
+            renderer.collect {
+                val name = it?.let { it::class.simpleName } ?: "null"
+                Timber.i("++++++++++ next renderer-$hostName $it")
+            }
+        }
+        Timber.i("++++++++++ renderer-$hostName done")
+
+        return host.createPresenter(viewChannel, args, savedInstanceState, presenterScope)
     }
 }
 
+@ExperimentalCoroutinesApi
 fun <T> Observable<T>.asFlow(): Flow<T> = callbackFlow {
     val disposable = subscribe({
         offer(it)
@@ -534,13 +598,63 @@ fun <T> Observable<T>.asFlow(): Flow<T> = callbackFlow {
     }
 }
 
+@ExperimentalCoroutinesApi
+fun <T> Observable<T>.asFlow(tag: String): Flow<T> = callbackFlow {
+    Timber.i("++++++++++ $tag start")
+    val disposable = subscribe({
+        Timber.i("++++++++++ $tag offer next")
+        offer(it)
+    }, {
+        Timber.i("++++++++++ $tag offer error")
+        close(it)
+    }, {
+        Timber.i("++++++++++ $tag offer complete")
+        close()
+    })
+
+    Timber.i("++++++++++ $tag waiting")
+    awaitClose {
+        Timber.i("++++++++++ $tag close")
+        disposable.dispose()
+    }
+}
+
 // TODO: Make proper cancellation
 @ExperimentalCoroutinesApi
 public fun <T> Flow<T>.takeUntil(predicate: suspend (T) -> Boolean): Flow<T> = flow {
-    collect { value ->
-        emit(value)
-        if (predicate(value)) {
-
+    try {
+        collect { value ->
+            emit(value)
+            if (predicate(value)) {
+                throw CancellationException()
+            }
         }
+    } catch (e: CancellationException) {
+        // TODO check owner
+        // e.checkOwnership(owner = this)
     }
 }
+
+@FlowPreview
+public fun <T1, T2> Flow<T1>.takeUntil(other: Flow<T2>): Flow<T1> =
+    object : AbstractFlow<T1>() {
+        override suspend fun collectSafely(collector: FlowCollector<T1>) {
+            coroutineScope {
+
+                val lock = AtomicBoolean(false)
+                val job = launch {
+                    other.first()
+                    lock.compareAndSet(false, true)
+                }
+
+                this@takeUntil.collect {
+                    if (!lock.get()) {
+                        collector.emit(it)
+                    } else {
+                        collector.emit(it)
+                        job.cancel()
+                    }
+                }
+            }
+        }
+    }

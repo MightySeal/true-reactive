@@ -4,7 +4,7 @@ ext {
     androidTargetSdkVersion = 28
     androidCompileSdkVersion = 28
 
-    coroutinesVersion = '1.3.3'
+    coroutinesVersion = '1.3.6'
 
     appCompat = '1.1.0'
     recycler = '1.1.0'
@@ -35,7 +35,7 @@ ext {
     robolectricVersion = '4.3'
     testCoreVersion = '1.3.0-alpha03'
 
-    leakCanary = '2.2'
+    leakCanary = '2.3'
     benchmark = '1.0.0'
     automator = '2.2.0'
 
@@ -54,7 +54,6 @@ ext {
             kotlinReflect : "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version",
             coroutinesCore: "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion",
             coroutinesRx  : "org.jetbrains.kotlinx:kotlinx-coroutines-rx2:$coroutinesVersion",
-            flowExtensions: "com.github.akarnokd:kotlin-flow-extensions:0.0.3",
 
             moshi         : "com.squareup.moshi:moshi:$moshiVersion",
             moshiKotlin   : "com.squareup.moshi:moshi-kotlin:$moshiVersion",
@@ -90,6 +89,7 @@ ext {
             constraintLayout     : "androidx.constraintlayout:constraintlayout:$constraintVersion",
             cardView             : "androidx.cardview:cardview:$cardviewVersion",
             viewpager2           : "androidx.viewpager2:viewpager2:1.0.0",
+            activity             : "androidx.activity:activity:1.2.0-alpha01",
 
             core                 : "androidx.core:core-ktx:$appCompat",
             appcompat            : "androidx.appcompat:appcompat:$appCompat",
@@ -149,6 +149,7 @@ ext {
             [configuration: "implementation", dependency: androidDependencies.constraintLayout],
             [configuration: "implementation", dependency: androidDependencies.cardView],
             [configuration: "implementation", dependency: androidDependencies.appcompat],
+            [configuration: "implementation", dependency: androidDependencies.activity],
             [configuration: "implementation", dependency: androidDependencies.shimmer],
             [configuration: "implementation", dependency: androidDependencies.lottie],
             [configuration: "implementation", dependency: androidDependencies.material],
@@ -299,6 +300,7 @@ ext {
             [configuration: "androidTestImplementation", dependency: androidDependencies.rxBinding],
             [configuration: "androidTestImplementation", dependency: androidDependencies.rxBindingMaterial],
             [configuration: "androidTestImplementation", dependency: androidDependencies.rxBindingAppcompat],
+            [configuration: "androidTestImplementation", dependency: androidDependencies.rxAndroid]
     ]
 
     libraryFlowDependencies = [
@@ -308,7 +310,6 @@ ext {
             [configuration: "api", dependency: javaDependencies.coroutinesCore],
             [configuration: "api", dependency: androidDependencies.coroutinesAndroid],
             [configuration: "api", dependency: javaDependencies.rxJava],
-            [configuration: "api", dependency: javaDependencies.flowExtensions],
             [configuration: "implementation", dependency: javaDependencies.coroutinesRx],
 
             [configuration: "api", dependency: androidDependencies.timber],

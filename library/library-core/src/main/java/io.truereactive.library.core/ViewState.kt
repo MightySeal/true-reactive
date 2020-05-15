@@ -15,7 +15,7 @@ sealed class ViewState(val name: String) {
     object Paused : ViewState("Paused")
     object Stopped : ViewState("Stopped")
     object SavingState : ViewState("SavingState")
-    object Destroyed : ViewState("SavingState")
+    object Destroyed : ViewState("Destroyed")
     object Dead : ViewState("Dead")
 }
 

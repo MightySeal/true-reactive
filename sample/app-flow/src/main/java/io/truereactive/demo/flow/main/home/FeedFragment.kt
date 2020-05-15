@@ -17,7 +17,9 @@ import io.truereactive.library.core.ViewEvents
 import io.truereactive.library.flow.*
 import kotlinx.android.synthetic.main.fragment_feed.*
 import kotlinx.android.synthetic.main.fragment_feed.view.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
@@ -40,7 +42,9 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
         sourcesPager.offscreenPageLimit = 1
         bar.replaceMenu(R.menu.home_menu)
 
-        sourcesPager.isSaveEnabled = false
+        // sourcesPager.isSaveEnabled = false
+
+
         adapter = createAdapter(null)
         /*if (!::adapter.isInitialized) {
             adapter = createAdapter(null)
@@ -61,6 +65,7 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
     }
 
     override fun render(model: FeedState) {
+        Timber.i("========== Render $model")
         adapter.setSources(model.sources)
         model.selectedPage?.let {
             sourcesPager.setCurrentItem(it, false)
@@ -87,7 +92,8 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
     override fun createPresenter(
         viewChannel: ViewChannel<FeedViewEvents, FeedState>,
         args: Bundle?,
-        savedState: Bundle?
+        savedState: Bundle?,
+        scope: CoroutineScope
     ): BasePresenter {
         val searchEvents = viewChannel.viewEventsUntilDead { searchInput }
 
@@ -98,7 +104,8 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
         putCache(component)
 
         return FeedPresenter(
-            viewChannel
+            viewChannel,
+            scope
         )
     }
 
@@ -145,9 +152,13 @@ class FeedViewEvents(view: View, searchView: SearchView) :
 
     val searchInput: Flow<SearchViewQueryTextEvent> = searchView.queryTextChangeEvents()
         .skipInitialValue()
+        .doOnSubscribe { Timber.i("++++++++++ Input subscribe") }
+        .doOnComplete { Timber.i("++++++++++ Input complete") }
+        .doOnDispose { Timber.i("++++++++++ Input dispose") }
+        .doOnError { Timber.i("++++++++++ Input error") }
         .throttleLast(300, TimeUnit.MILLISECONDS)
         .share()
-        .asFlow()
+        .asFlow("Input")
 }
 
 data class FeedState(

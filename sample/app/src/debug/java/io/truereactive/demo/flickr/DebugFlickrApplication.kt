@@ -1,5 +1,6 @@
 package io.truereactive.demo.flickr
 
+import io.truereactive.library.rx.optionalReporter
 import leakcanary.AppWatcher
 import leakcanary.LeakCanary
 import shark.AndroidObjectInspectors
@@ -12,7 +13,7 @@ class DebugFlickrApplication : FlickrApplication() {
         Timber.i("Debug app")
         AppWatcher.config = AppWatcher.config.copy(watchFragmentViews = false)
         LeakCanary.config = LeakCanary.config.copy(
-            objectInspectors = AndroidObjectInspectors.appDefaults + reactiveApp.optionalReporter
+            objectInspectors = AndroidObjectInspectors.appDefaults + optionalReporter
         )
     }
 }

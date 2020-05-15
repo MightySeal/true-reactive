@@ -14,7 +14,6 @@ import io.truereactive.library.core.Optional
 import io.truereactive.library.rx.BuildConfig
 import io.truereactive.library.rx.abstraction.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import shark.ObjectInspector
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
@@ -26,18 +25,8 @@ interface ReactiveApplication {
 @ExperimentalCoroutinesApi
 class ReactiveApp(app: Application) : ReactiveApplication {
 
-    val optionalReporter = ObjectInspector { reporter ->
-        reporter.whenInstanceOf(Optional::class) { instance ->
-
-            val label = instance[Optional::class, "logKey"]!!
-            reporter.labels.add("${label.name}: ${label.value.readAsJavaString()}")
-        }
-    }
-
     private val compositeDisposable = CompositeDisposable()
 
-    // TODO: Use reduce like in fragment
-    // TODO: possibly dispose when activity count is 0. Maybe sort of refCount base on activity count
     private val rxActivityCallbacks: Observable<ActivityViewState<ViewEvents, Any>> by lazy(
         LazyThreadSafetyMode.NONE
     ) {
@@ -319,6 +308,9 @@ class ReactiveApp(app: Application) : ReactiveApplication {
 
                                 val count = refCount[fr::class]?.decrementAndGet()
 
+                                Timber.i("Fragment destroyed: ${f::class.simpleName} — ${fr.viewIdKey} ${fr.requireActivity().isFinishing}, ${fr.isRemoving}, ${!fr.requireActivity().isChangingConfigurations}")
+                                Timber.i("Fragment destroyed: ${f::class.simpleName} — overall ${(fr.requireActivity().isFinishing || fr.isRemoving) && !fr.requireActivity().isChangingConfigurations}")
+
                                 if ((fr.requireActivity().isFinishing || fr.isRemoving) && !fr.requireActivity().isChangingConfigurations) {
 
                                     emitter.onNext(
@@ -414,6 +406,31 @@ class ReactiveApp(app: Application) : ReactiveApplication {
         }
     }
 
+    /*fun keke() {
+        .scan { first, second ->
+
+            when (second.state) {
+                ViewState.Created -> second
+
+                ViewState.Started,
+                ViewState.Resumed,
+                ViewState.Paused -> second.copy(view = first.view)
+
+                ViewState.Stopped,
+                ViewState.Destroyed,
+                ViewState.SavingState,
+                ViewState.Dead -> second.copy(view = null)
+            }
+        }
+    }*/
+
+    private fun <VE : ViewEvents, VS : AndroidViewState<VE, M>, M> reduce(
+        first: VS,
+        second: VS
+    ): VS {
+        return first
+    }
+
     private fun <VE : ViewEvents, VS : AndroidViewState<VE, M>, M> createPresenter(
         host: BaseHost<VE, M>,
         hostKey: String,
@@ -422,9 +439,16 @@ class ReactiveApp(app: Application) : ReactiveApplication {
         args: Bundle?
     ): BasePresenter {
 
+        val hostName = host::class.simpleName
+
         // TODO: Make state for for internal and external use. Internal has SavingState, external doesn't.
+        // TODO: filter host key before calling createPresenter, reduce only fragment state
         val state = hostEvents
             .filter { it.key == hostKey }
+
+            .map<AndroidViewState<VE, M>> { it } // hack to upcast VS to AndroidViewState<VE, M>
+            .scan { previous, current -> current.reduce(previous) }
+
             .takeUntil { it.state == ViewState.Dead }
             .share()
 
@@ -468,6 +492,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
                 } else {
                     Optional(null)
                 }
+            }.doOnNext {
+                Timber.i("++++++++++ next viewEvents-$hostName $it")
             }
             .replay(1)
 

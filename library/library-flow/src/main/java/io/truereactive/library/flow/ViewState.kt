@@ -12,6 +12,8 @@ internal abstract class AndroidViewState<VE : ViewEvents, M> {
     abstract val view: View?
     abstract val state: ViewState
     abstract val key: String
+
+    internal abstract fun reduce(previous: AndroidViewState<VE, M>): AndroidViewState<VE, M>
 }
 
 internal data class ActivityViewState<VE : ViewEvents, M>(
@@ -21,7 +23,9 @@ internal data class ActivityViewState<VE : ViewEvents, M>(
     override val view: View?,
     override val state: ViewState,
     override val key: String
-) : AndroidViewState<VE, M>()
+) : AndroidViewState<VE, M>() {
+    override fun reduce(previous: AndroidViewState<VE, M>): AndroidViewState<VE, M> = this
+}
 
 internal data class FragmentViewState<VE : ViewEvents, M>(
     override val host: BaseFragment<VE, M>,
@@ -30,7 +34,23 @@ internal data class FragmentViewState<VE : ViewEvents, M>(
     override val view: View?,
     override val state: ViewState,
     override val key: String
-) : AndroidViewState<VE, M>()
+) : AndroidViewState<VE, M>() {
+
+    override fun reduce(previous: AndroidViewState<VE, M>): AndroidViewState<VE, M> {
+        return when (this.state) {
+            ViewState.Created -> this
+
+            ViewState.Started,
+            ViewState.Resumed,
+            ViewState.Paused -> this.copy(view = previous.view)
+
+            ViewState.Stopped,
+            ViewState.Destroyed,
+            ViewState.SavingState,
+            ViewState.Dead -> this.copy(view = null)
+        }
+    }
+}
 
 internal fun <VE : ViewEvents, M, AVS : AndroidViewState<VE, M>> sameAliveState(
     first: AVS,

@@ -6,6 +6,7 @@ import io.truereactive.library.rx.reactiveui.renderWhileAlive
 import io.truereactive.library.rx.reactiveui.restoredState
 import io.truereactive.library.rx.reactiveui.saveState
 import io.truereactive.library.rx.reactiveui.viewEventsUntilDead
+import timber.log.Timber
 
 class FeedPresenter(
     private val channel: ViewChannel<FeedViewEvents, FeedState>
@@ -15,10 +16,10 @@ class FeedPresenter(
         // TODO: make different sources instead of different queries (i.e. Flickr, Unsplash, Dribbble, etc)
         val sources = listOf(
             "London",
-            "Zurich",
+            /*"Zurich",
             "Copenhagen",
             "Paris",
-            "Amsterdam"
+            "Amsterdam"*/
         )
 
         val restoredState = channel.restoredState()
@@ -37,6 +38,7 @@ class FeedPresenter(
             }
             .startWith(FeedState(sources))
             .distinctUntilChanged()
+            // .renderWhileAlive(channel, ViewState.Resumed)
             .renderWhileAlive(channel)
 
         channel.viewEventsUntilDead {
@@ -44,6 +46,10 @@ class FeedPresenter(
         }.saveState(channel) { bundle, data ->
             bundle.putInt(SAVED_INDEX_KEY, data)
         }
+
+        channel.viewEventsUntilDead("Input") { searchInput }
+            .subscribe { Timber.i("++++++++++ input $it") }
+            .untilDead()
     }
 
     companion object {

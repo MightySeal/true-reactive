@@ -41,7 +41,9 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
         sourcesPager.offscreenPageLimit = 1
         bar.replaceMenu(R.menu.home_menu)
 
-        sourcesPager.isSaveEnabled = false
+        // sourcesPager.isSaveEnabled = false
+
+
         adapter = createAdapter(null)
         /*if (!::adapter.isInitialized) {
             adapter = createAdapter(null)
@@ -52,6 +54,9 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
 
 
     // Dirty hack to invalidate ViewPager state so the adapter can be re-attached
+    // TODO: Need to either reuse adapter
+    //   or clear pager from fragments to be restored
+    //   ViewPager2
     override fun onDestroyView() {
         super.onDestroyView()
         sourcesPager.adapter = null
@@ -63,6 +68,7 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
 
     override fun render(model: FeedState) {
         Timber.i("========== Render $model")
+        // adapter.setSources(model.sources, !model.restored)
         adapter.setSources(model.sources)
         model.selectedPage?.let {
             sourcesPager.setCurrentItem(it, false)
@@ -140,8 +146,7 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
 }
 
 
-class FeedViewEvents(view: View, searchView: SearchView) :
-    ViewEvents {
+class FeedViewEvents(view: View, searchView: SearchView) : ViewEvents {
     /*val pageSelectedEvents: Observable<Int> =
         (view.sourcesPager?.events() ?: Observable.empty()).share()*/
 

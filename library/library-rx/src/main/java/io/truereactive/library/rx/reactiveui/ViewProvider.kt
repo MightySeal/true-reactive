@@ -12,6 +12,7 @@ import io.truereactive.library.core.*
 import io.truereactive.library.rx.abstraction.BaseActivity
 import io.truereactive.library.rx.abstraction.BaseFragment
 import io.truereactive.library.rx.abstraction.ViewChannel
+import timber.log.Timber
 
 // TODO: provide a context for it (multireceivers could help a lot here)
 //   interface ViewScope {
@@ -137,7 +138,7 @@ fun <VE : ViewEvents, M> M.renderWhileAlive(channel: ViewChannel<VE, M>): Dispos
 }
 
 
-// TODO: REVIEW
+// TODO: REVIEW, maybe need to switch to empty observable when the value is null
 /**
  *
  *  Creates a stream of events of type T which is completed when the view is destroyed permanently.
@@ -145,9 +146,15 @@ fun <VE : ViewEvents, M> M.renderWhileAlive(channel: ViewChannel<VE, M>): Dispos
  *  @return Observable<T> of type T that reflects selected stream across any config changes, recreations, except process death.
  *
  */
-fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(selector: VE.() -> Observable<T>): Observable<T> {
+fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(
+    tag: String? = null,
+    selector: VE.() -> Observable<T>
+): Observable<T> {
     return this.viewEvents
+        .observeOn(AndroidSchedulers.mainThread())
+        .doOnNext { Timber.i("++++++++++ Kek $tag $it") }
         .filter { it.value != null }
+        .doOnNext { Timber.i("++++++++++ Kek1 $tag $it") }
         .switchMap { selector(it.value!!) }
         .takeUntil(this.state.filter { it == ViewState.Dead })
 }

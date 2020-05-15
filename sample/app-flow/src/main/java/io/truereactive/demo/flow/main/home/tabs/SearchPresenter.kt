@@ -5,15 +5,17 @@ import com.jakewharton.rxbinding3.appcompat.SearchViewQueryTextEvent
 import io.truereactive.demo.flickr.common.data.domain.PhotoModel
 import io.truereactive.demo.flickr.common.data.repository.PhotosRepository
 import io.truereactive.library.flow.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class SearchPresenter(
+    scope: CoroutineScope,
     private val channel: ViewChannel<SearchEvents, SearchState>,
     private val searchEvents: Flow<SearchViewQueryTextEvent?>,
     private val repository: PhotosRepository,
     private val initialState: String? = null
-) : BasePresenter() {
+) : BasePresenter(scope) {
 
     init {
 
@@ -54,7 +56,10 @@ class SearchPresenter(
                 restoredScrollPosition
             ) { search: List<PhotoModel>, scroll: Int ->
                 Pair(search, scroll)
-            }.scan(SearchState(emptyList(), null, null)) { prevState, newState ->
+            }.map { (photos, scrollPosition) ->
+                SearchState(photos, null, scrollPosition)
+            }
+                /*.scan(SearchState(emptyList(), null, null)) { prevState, newState ->
                 val first = prevState.photos
                 val second = newState.first
                 val diff = diff(first, second)
@@ -65,7 +70,7 @@ class SearchPresenter(
                     else -> newState.second
                 }
                 SearchState(second, diff, scrollPosition)
-            }.distinctUntilChanged { first, second -> first.photos == second.photos }
+            }*/.distinctUntilChanged { first, second -> first.photos == second.photos }
                 .renderWhileAlive(channel)
         }
 

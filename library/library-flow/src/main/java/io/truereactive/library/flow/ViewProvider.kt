@@ -3,10 +3,10 @@ package io.truereactive.library.flow
 import android.app.Activity
 import android.os.Bundle
 import androidx.fragment.app.Fragment
-import hu.akarnokd.kotlin.flow.takeUntil
 import io.truereactive.library.core.ViewEvents
 import io.truereactive.library.core.ViewState
 import kotlinx.coroutines.flow.*
+import timber.log.Timber
 
 internal inline fun Activity.executeIfBase(action: (BaseActivity<ViewEvents, Any>) -> Unit) {
     (this as? BaseActivity<ViewEvents, Any>)?.let(action)
@@ -36,10 +36,17 @@ suspend fun <VE : ViewEvents, M, D> Flow<D>.saveState(
     invoke(bundle!!, data)
 }
 
-fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(selector: VE.() -> Flow<T>): Flow<T> {
+fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(
+    tag: String? = null,
+    selector: VE.() -> Flow<T>
+): Flow<T> {
     return this.viewEvents
+        .onStart { if (tag != null) Timber.i("++++++++++ viewEventsUntilDead $tag start") }
+        .onEach { if (tag != null) Timber.i("++++++++++ viewEventsUntilDead $tag $it") }
         .filterNotNull()
+        .onEach { if (tag != null) Timber.i("++++++++++ viewEventsUntilDead filtered $tag $it") }
         .flatMapLatest { selector(it) }
+        .onEach { if (tag != null) Timber.i("++++++++++ viewEventsUntilDead mapped $tag $it") }
         .takeUntil(this.state.filter { it == ViewState.Dead })
 }
 
@@ -59,4 +66,17 @@ fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.mapUntilDead(block: VE.() -> T): 
     this.viewEvents
         .filterNotNull()
         .map { block(it) }
+        .takeUntil(this.state.filter { it == ViewState.Dead })
+
+fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.mapUntilDead(
+    tag: String? = null,
+    block: VE.() -> T
+): Flow<T> =
+    this.viewEvents
+        .onStart { if (tag != null) Timber.i("++++++++++ mapUntilDead $tag start") }
+        .onEach { if (tag != null) Timber.i("++++++++++ mapUntilDead $tag $it") }
+        .filterNotNull()
+        .onEach { if (tag != null) Timber.i("++++++++++ mapUntilDead filtered $tag $it") }
+        .map { block(it) }
+        .onEach { if (tag != null) Timber.i("++++++++++ mapUntilDead mapped $tag $it") }
         .takeUntil(this.state.filter { it == ViewState.Dead })

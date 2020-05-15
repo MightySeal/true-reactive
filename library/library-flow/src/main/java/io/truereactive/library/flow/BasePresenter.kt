@@ -10,9 +10,9 @@ import io.truereactive.library.core.Renderer
 import io.truereactive.library.core.ViewEvents
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
 
-abstract class BasePresenter : CoroutineScope by MainScope() {
+abstract class BasePresenter(scope: CoroutineScope) : CoroutineScope by scope {
+    // abstract class BasePresenter(scope: CoroutineScope) : CoroutineScope by MainScope() {
     val parentJob = Job()
 
     open fun onClear() {}
@@ -48,7 +48,8 @@ internal interface PresenterHost<VE : ViewEvents, M> {
     fun createPresenter(
         viewChannel: ViewChannel<VE, M>,
         args: Bundle?,
-        savedState: Bundle?
+        savedState: Bundle?,
+        scope: CoroutineScope
     ): BasePresenter
 
 }

@@ -1,1 +1,1 @@
-../gradlew
+../gradlew :library:library-rx:bintrayPublish

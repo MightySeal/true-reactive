@@ -8,6 +8,8 @@ import io.truereactive.library.core.ViewEvents
 import io.truereactive.library.flow.BaseActivity
 import io.truereactive.library.flow.BasePresenter
 import io.truereactive.library.flow.ViewChannel
+import kotlinx.coroutines.CoroutineScope
+import timber.log.Timber
 
 class MainActivity : BaseActivity<MainFlickrEvents, Unit>() {
 
@@ -15,14 +17,22 @@ class MainActivity : BaseActivity<MainFlickrEvents, Unit>() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_flickr)
+
+        Timber.i("========== onCreate activity")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Timber.i("========== onDestroy activity")
     }
 
     override fun createPresenter(
         viewChannel: ViewChannel<MainFlickrEvents, Unit>,
         args: Bundle?,
-        savedState: Bundle?
+        savedState: Bundle?,
+        scope: CoroutineScope
     ): BasePresenter {
-        return MainFlickrPresenter(viewChannel)
+        return MainFlickrPresenter(viewChannel, scope)
     }
 
     override fun createViewHolder(view: View): MainFlickrEvents {

@@ -32,4 +32,8 @@ internal object PresenterCache {
         }
     }
 
+    fun log(): String = "\n" + map.entries.joinToString(separator = "\n", prefix = "\t\t\t") {
+        "${it.key}, ${it.value::class.simpleName} - ${it.value.hashCode()}"
+    }
+
 }

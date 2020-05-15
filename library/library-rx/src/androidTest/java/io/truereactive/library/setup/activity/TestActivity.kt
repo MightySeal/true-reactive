@@ -11,6 +11,7 @@ import io.truereactive.library.rx.abstraction.ViewChannel
 import io.truereactive.library.rx.reactiveui.renderWhileActive
 import io.truereactive.library.rx.reactiveui.viewEventsUntilDead
 import io.truereactive.library.rx.test.R
+import timber.log.Timber
 
 class TestActivity : BaseActivity<TestActivityEvents, String>() {
 
@@ -21,7 +22,7 @@ class TestActivity : BaseActivity<TestActivityEvents, String>() {
     }
 
     override fun render(model: String) {
-
+        Timber.i("---------- Render")
     }
 
     override fun createPresenter(
@@ -48,7 +49,6 @@ class TestPresenter(
             .renderWhileActive(viewChannel)
     }
 }
-
 
 class TestActivityEvents(
     view: View
