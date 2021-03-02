@@ -22,9 +22,7 @@ class MainFlickrPresenter(
             Timber.i("========== launch job")
 
             viewChannel
-                .mapUntilDead("KEKEKE") { openFeed }
-                .onEach { Timber.i("========== map open feed") }
-                .onCompletion { Timber.i("========== Complete mapping") }
+                .mapUntilDead { openFeed }
                 .take(1)
                 .collect { openPopular ->
                     openPopular()

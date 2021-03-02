@@ -445,10 +445,8 @@ class ReactiveApp(app: Application) : ReactiveApplication {
         // TODO: filter host key before calling createPresenter, reduce only fragment state
         val state = hostEvents
             .filter { it.key == hostKey }
-
             .map<AndroidViewState<VE, M>> { it } // hack to upcast VS to AndroidViewState<VE, M>
             .scan { previous, current -> current.reduce(previous) }
-
             .takeUntil { it.state == ViewState.Dead }
             .share()
 

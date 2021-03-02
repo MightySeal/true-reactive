@@ -18,7 +18,6 @@ import io.truereactive.library.rx.abstraction.*
 import io.truereactive.library.rx.reactiveui.viewEventsUntilDead
 import kotlinx.android.synthetic.main.fragment_feed.*
 import kotlinx.android.synthetic.main.fragment_feed.view.*
-import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
@@ -62,37 +61,13 @@ class FeedFragment : BaseFragment<FeedViewEvents, FeedState>() {
         sourcesPager.adapter = null
     }
 
-    override fun onResume() {
-        super.onResume()
-    }
-
     override fun render(model: FeedState) {
-        Timber.i("========== Render $model")
         // adapter.setSources(model.sources, !model.restored)
         adapter.setSources(model.sources)
         model.selectedPage?.let {
             sourcesPager.setCurrentItem(it, false)
         }
     }
-
-    /*override fun render(model: FeedState) {
-        Timber.i("========== Render $model")
-        if (model.restored) {
-            Timber.i("========== Create adapter")
-            adapter = createAdapter(model.sources)
-        } else {
-            if (!::adapter.isInitialized) {
-                Timber.i("========== Re-create adapter")
-                adapter = createAdapter(null)
-            }
-
-            Timber.i("========== Set sources")
-            adapter.setSources(model.sources)
-        }
-        model.selectedPage?.let {
-            sourcesPager.setCurrentItem(it, false)
-        }
-    }*/
 
     override fun createPresenter(
         viewChannel: ViewChannel<FeedViewEvents, FeedState>,

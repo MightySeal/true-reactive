@@ -38,8 +38,6 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        Timber.i("========== OnCreate")
     }
 
     private val photosAdapter by lazy(LazyThreadSafetyMode.NONE) {
@@ -56,14 +54,10 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
         photosAdapter.replace(RecyclerData(model.photos, model.photosDiff))
 
         model.scrollPosition?.let(photosList::scrollToPosition)
-        // Trace.endSection()
-        // Debug.stopMethodTracing()
     }
 
     override fun onResume() {
         super.onResume()
-
-        Timber.i("========== Resume search")
     }
 
     override fun createPresenter(
@@ -104,13 +98,6 @@ class SearchFragment : BaseFragment<SearchEvents, SearchState>() {
         photosList.layoutManager = GridLayoutManager(requireContext(), 2)
         photosList.adapter = photosAdapter
     }
-
-    /*override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-
-        val visibleItem = (photosList.layoutManager as LinearLayoutManager).findFirstVisibleItemPosition()
-        outState.putInt(SCROLL_POSITION_KEY, visibleItem)
-    }*/
 
     companion object {
         private const val SEARCH_KEY = "search_key"

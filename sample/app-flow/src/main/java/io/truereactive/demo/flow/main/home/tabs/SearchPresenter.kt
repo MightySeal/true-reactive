@@ -33,22 +33,15 @@ class SearchPresenter(
 
         val searchResults = searchEvents
             .map { it?.queryText }
-            // .filter { it.isNotBlank() }
-            // .throttleLast(300, TimeUnit.MILLISECONDS)
-            // .startWith(initialState ?: "")
+            .filter { it.isNotBlank() }
+            .throttleLast(300, TimeUnit.MILLISECONDS)
+            .startWith(initialState ?: "")
             .onStart { emit(initialState) }
             .distinctUntilChanged()
             .flatMapLatest { query ->
                 query?.takeUnless(CharSequence::isBlank)?.let { repository.search(it.toString()) }
                     ?: repository.getRecent()
             }
-        /*.switchMap { query ->
-            if (query.isNotBlank()) {
-                repository.search(query.toString())
-            } else {
-                repository.getRecent()
-            }
-        }.observeOn(Schedulers.computation())*/
 
         launch {
             combine(
@@ -58,8 +51,7 @@ class SearchPresenter(
                 Pair(search, scroll)
             }.map { (photos, scrollPosition) ->
                 SearchState(photos, null, scrollPosition)
-            }
-                /*.scan(SearchState(emptyList(), null, null)) { prevState, newState ->
+            }.scan(SearchState(emptyList(), null, null)) { prevState, newState ->
                 val first = prevState.photos
                 val second = newState.first
                 val diff = diff(first, second)
@@ -70,29 +62,9 @@ class SearchPresenter(
                     else -> newState.second
                 }
                 SearchState(second, diff, scrollPosition)
-            }*/.distinctUntilChanged { first, second -> first.photos == second.photos }
+            .distinctUntilChanged { first, second -> first.photos == second.photos }
                 .renderWhileAlive(channel)
         }
-
-        /*Observable.combineLatest(
-            searchResults,
-            restoredScrollPosition,
-            BiFunction { search: List<PhotoModel>, scroll: Int ->
-                Pair(search, scroll)
-            }).scan(SearchState(emptyList(), null, null), { prevState, newState ->
-
-            val first = prevState.photos
-            val second = newState.first
-            val diff = diff(first, second)
-
-            val scrollPosition = when {
-                prevState.scrollPosition != null -> null
-                newState.second == -1 -> null
-                else -> newState.second
-            }
-            SearchState(second, diff, scrollPosition)
-        }).distinctUntilChanged { first, second -> first.photos == second.photos }
-            .renderWhileAlive(channel)*/
 
         launch {
             channel.viewEventsUntilDead {
@@ -102,58 +74,6 @@ class SearchPresenter(
             }
         }
     }
-
-    /*private fun ref() {
-        val restoredScrollPosition = channel.restoredState()
-            .map {
-                it.getInt(SCROLL_POSITION_KEY, -1)
-            }.filter { it != -1 }
-            .startWith(-1)
-
-        // val restoredScrollPosition = Observable.just(-1)
-
-        val searchResults = searchEvents
-            .map(SearchViewQueryTextEvent::queryText)
-            .filter(CharSequence::isNotBlank)
-            .throttleLast(300, TimeUnit.MILLISECONDS)
-            .startWith(initialState ?: "")
-            .distinctUntilChanged()
-            .switchMap { query ->
-                if (query.isNotBlank()) {
-                    repository.search(query.toString())
-                } else {
-                    repository.getRecent()
-                }
-            }.observeOn(Schedulers.computation())
-
-        // TODO: Make library function for handling restored state
-        Observable.combineLatest(
-            searchResults,
-            restoredScrollPosition,
-            BiFunction { search: List<PhotoModel>, scroll: Int ->
-                Pair(search, scroll)
-            }).scan(SearchState(emptyList(), null, null), { prevState, newState ->
-
-            val first = prevState.photos
-            val second = newState.first
-            val diff = diff(first, second)
-
-            val scrollPosition = when {
-                prevState.scrollPosition != null -> null
-                newState.second == -1 -> null
-                else -> newState.second
-            }
-            SearchState(second, diff, scrollPosition)
-        }).distinctUntilChanged { first, second -> first.photos == second.photos }
-            .renderWhileAlive(channel)
-
-        channel.viewEventsUntilDead {
-            scrollState
-        }.saveState(channel) { bundle, position ->
-            bundle.putInt(SCROLL_POSITION_KEY, position)
-        }
-
-    }*/
 
     private fun diff(first: List<PhotoModel>, second: List<PhotoModel>): DiffUtil.DiffResult =
         DiffUtil.calculateDiff(object : DiffUtil.Callback() {

@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
-import com.github.rbusarow.shareIn
 import io.reactivex.Observable
 import io.truereactive.library.core.*
 import io.truereactive.library.core.Optional
@@ -38,7 +37,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication,
 
     // TODO: Use reduce like in fragment
     // TODO: possibly dispose when activity count is 0. Maybe sort of refCount base on activity count
-    private val rxActivityCallbacks: Flow<ActivityViewState<ViewEvents, Any>> by lazy(
+    private val rxActivityCallbacks: SharedFlow<ActivityViewState<ViewEvents, Any>> by lazy(
         LazyThreadSafetyMode.NONE
     ) {
         callbackFlow<ActivityViewState<ViewEvents, Any>> {
@@ -176,11 +175,10 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication,
             .onStart { Timber.i("========== Start activity callbacks") }
             .onCompletion { Timber.i("========== Stop activity callbacks") }
             .onEach { Timber.i("========== New state ${it.host::class.simpleName}, ${it.state.name}") }
-            // .shareIn(this)
-            .shareIn(scope = this, tag = "rxActivityCallbacks")
+            .shareIn(scope = this, started = SharingStarted.WhileSubscribed(replayExpirationMillis = 0))
     }
 
-    private val rxFragmentCallbacks: Flow<FragmentViewState<ViewEvents, Any>> by lazy(
+    private val rxFragmentCallbacks: SharedFlow<FragmentViewState<ViewEvents, Any>> by lazy(
         LazyThreadSafetyMode.NONE
     ) {
         rxActivityCallbacks
@@ -363,8 +361,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication,
                 }
             }
             .flowOn(Dispatchers.Main.immediate)
-            // .shareIn(this)
-            .shareIn(scope = this, tag = "rxFragmentCallbacks")
+            .shareIn(scope = this, started = SharingStarted.WhileSubscribed(replayExpirationMillis = 0))
     }
 
     private val hostCallbacks = rxFragmentCallbacks
@@ -465,10 +462,10 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication,
         val state = hostEvents
             .filter { it.key == hostKey }
             .map { it as AndroidViewState<VE, M> }
-            .scanReduce { previous, current -> current.reduce(previous) }
+            .runningReduce { previous, current -> current.reduce(previous) }
             .takeUntil { it.state == ViewState.Dead }
             .flowOn(Dispatchers.Main.immediate)
-            .shareIn(scope = shareScope, tag = "state-$hostName")
+            .shareIn(scope = shareScope, started = SharingStarted.WhileSubscribed(replayExpirationMillis = 0))
 
         val restoredState = state
             .filter { it.state == ViewState.Created || it.state == ViewState.Destroyed }
@@ -482,7 +479,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication,
             .distinctUntilChanged()
             .map { it.value }
             .flowOn(Dispatchers.Main.immediate)
-            .shareIn(shareScope, 1, "restoredState-$hostName")
+            .shareIn(scope = shareScope, started = SharingStarted.WhileSubscribed(replayExpirationMillis = 0), replay = 1)
 
         val outState = state
             .map {
@@ -495,16 +492,16 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication,
             .distinctUntilChanged()
             .map { it.value }
             .flowOn(Dispatchers.Main.immediate)
-            .shareIn(shareScope, 1, "outState-$hostName")
+            .shareIn(scope = shareScope, started = SharingStarted.WhileSubscribed(replayExpirationMillis = 0), replay = 1)
 
         val hostState = state
             .map { it.state }
             .flowOn(Dispatchers.Main.immediate)
-            .shareIn(shareScope, 1, "hostState-$hostName")
+            .shareIn(scope = shareScope, started = SharingStarted.WhileSubscribed(replayExpirationMillis = 0), replay = 1)
 
         val viewState = state
-            .flowOn(Dispatchers.Main.immediate)
-            .shareIn(shareScope, tag = "viewState-$hostName")
+            // .flowOn(Dispatchers.Main.immediate)
+            .shareIn(scope = shareScope, started = SharingStarted.WhileSubscribed(replayExpirationMillis = 0), replay = 1)
 
         val viewEvents = viewState
             .distinctUntilChanged { prev, current ->
@@ -518,7 +515,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication,
                 }
             }
             .flowOn(Dispatchers.Main.immediate)
-            .shareIn(shareScope, 1, "viewEvents-$hostName")
+            .shareIn(scope = shareScope, started = SharingStarted.WhileSubscribed(replayExpirationMillis = 0), replay = 1)
 
         val renderer = viewState
             .distinctUntilChanged(::sameAliveState)
@@ -530,7 +527,7 @@ class ReactiveApplicationCompat(app: Application) : ReactiveApplication,
                 }
             }
             .flowOn(Dispatchers.Main.immediate)
-            .shareIn(shareScope, 1, "renderer-$hostName")
+            .shareIn(scope = shareScope, started = SharingStarted.WhileSubscribed(replayExpirationMillis = 0), replay = 1)
 
         val viewChannel = ViewChannel(
             restoredState = restoredState,
@@ -620,8 +617,7 @@ fun <T> Observable<T>.asFlow(tag: String): Flow<T> = callbackFlow {
 }
 
 // TODO: Make proper cancellation
-@ExperimentalCoroutinesApi
-public fun <T> Flow<T>.takeUntil(predicate: suspend (T) -> Boolean): Flow<T> = flow {
+fun <T> Flow<T>.takeUntil(predicate: suspend (T) -> Boolean): Flow<T> = flow {
     try {
         collect { value ->
             emit(value)
@@ -635,8 +631,7 @@ public fun <T> Flow<T>.takeUntil(predicate: suspend (T) -> Boolean): Flow<T> = f
     }
 }
 
-@FlowPreview
-public fun <T1, T2> Flow<T1>.takeUntil(other: Flow<T2>): Flow<T1> =
+fun <T1, T2> Flow<T1>.takeUntil(other: Flow<T2>): Flow<T1> =
     object : AbstractFlow<T1>() {
         override suspend fun collectSafely(collector: FlowCollector<T1>) {
             coroutineScope {

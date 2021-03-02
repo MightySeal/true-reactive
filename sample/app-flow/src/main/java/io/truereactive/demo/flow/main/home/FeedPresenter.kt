@@ -15,12 +15,11 @@ class FeedPresenter(
     init {
         // TODO: make different sources instead of different queries (i.e. Flickr, Unsplash, Dribbble, etc)
         val sources = listOf(
-            "London"
-            /*,
+            "London",
             "Zurich",
             "Copenhagen",
             "Paris",
-            "Amsterdam"*/
+            "Amsterdam"
         )/*.let {
             emptyList<String>()
         }*/
@@ -29,7 +28,11 @@ class FeedPresenter(
             .filter { it.containsKey(SAVED_INDEX_KEY) }
             .map {
                 it.getInt(SAVED_INDEX_KEY)
-            }//.share()
+            }.onEach {
+                Timber.i("Kekekeke $it")
+            }
+
+        //.share()
 
         launch {
             restoredState

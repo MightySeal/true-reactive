@@ -152,9 +152,7 @@ fun <VE : ViewEvents, M, T> ViewChannel<VE, M>.viewEventsUntilDead(
 ): Observable<T> {
     return this.viewEvents
         .observeOn(AndroidSchedulers.mainThread())
-        .doOnNext { Timber.i("++++++++++ Kek $tag $it") }
         .filter { it.value != null }
-        .doOnNext { Timber.i("++++++++++ Kek1 $tag $it") }
         .switchMap { selector(it.value!!) }
         .takeUntil(this.state.filter { it == ViewState.Dead })
 }

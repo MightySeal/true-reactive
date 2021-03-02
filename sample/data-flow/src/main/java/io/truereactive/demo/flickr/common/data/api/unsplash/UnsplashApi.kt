@@ -3,6 +3,7 @@ package io.truereactive.demo.flickr.common.data.api.unsplash
 import io.truereactive.demo.flickr.common.data.api.unsplash.model.UnsplashPhoto
 import io.truereactive.demo.flickr.common.data.api.unsplash.model.UnsplashSearchResult
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 internal interface UnsplashApi {
@@ -11,7 +12,7 @@ internal interface UnsplashApi {
     suspend fun getPhotos(@Query("per_page") perPage: Int): List<UnsplashPhoto>
 
     @GET("/photos/{id}")
-    suspend fun getPhoto(@Query("id") id: String): UnsplashPhoto
+    suspend fun getPhoto(@Path("id") id: String): UnsplashPhoto
 
     @GET("/search/photos")
     suspend fun search(@Query("query") query: String): UnsplashSearchResult

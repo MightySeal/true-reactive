@@ -16,10 +16,10 @@ class FeedPresenter(
         // TODO: make different sources instead of different queries (i.e. Flickr, Unsplash, Dribbble, etc)
         val sources = listOf(
             "London",
-            /*"Zurich",
+            "Zurich",
             "Copenhagen",
             "Paris",
-            "Amsterdam"*/
+            "Amsterdam"
         )
 
         val restoredState = channel.restoredState()
@@ -38,7 +38,6 @@ class FeedPresenter(
             }
             .startWith(FeedState(sources))
             .distinctUntilChanged()
-            // .renderWhileAlive(channel, ViewState.Resumed)
             .renderWhileAlive(channel)
 
         channel.viewEventsUntilDead {
@@ -48,7 +47,7 @@ class FeedPresenter(
         }
 
         channel.viewEventsUntilDead("Input") { searchInput }
-            .subscribe { Timber.i("++++++++++ input $it") }
+            .subscribe { }
             .untilDead()
     }
 
